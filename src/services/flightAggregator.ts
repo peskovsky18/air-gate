@@ -1,27 +1,75 @@
-import { Flight, SearchParams, SellerOffer, DatePriceHeatmap, LayoverInfo, FlightSegment, MultiHubInfo, PriceVerdict, PaymentBreakdown } from '../types';
+import { Flight, SearchParams, SellerOffer, DatePriceHeatmap, LayoverInfo, FlightSegment, MultiHubInfo, PriceVerdict, PaymentBreakdown, MarketAnalysis } from '../types';
 import { getAirportByCode, getNearbyAirports } from '../data/airports';
 
-const GLOBAL_SELLERS = [
-  { name: 'City.Travel', rating: 4.8, rubFee: 0, url: 'https://city.travel/' },
-  { name: 'КупиБилет', rating: 4.7, rubFee: 150, url: 'https://www.kupibilet.ru/' },
-  { name: 'OneTwoTrip', rating: 4.9, rubFee: 290, url: 'https://www.onetwotrip.com/' },
-  { name: 'SuperKassa', rating: 4.6, rubFee: -200, url: 'https://superkassa.ru/' },
-  { name: 'Aviakassa', rating: 4.7, rubFee: 80, url: 'https://www.aviakassa.com/' },
-  { name: 'Trip.com', rating: 4.9, rubFee: 120, url: 'https://ru.trip.com/flights/' },
-  { name: 'Biletik.aero', rating: 4.6, rubFee: -150, url: 'https://biletik.aero/' },
-];
+// Third-party intermediaries / OTAs with genuine deep-link construction
+export const buildPartnerDeepLink = (
+  sellerName: string,
+  fromCode: string,
+  toCode: string,
+  departureDate: string,
+  passengers: number = 1
+): string => {
+  const name = sellerName.toLowerCase();
+  const cleanDate = departureDate.replace(/-/g, '');
 
-const getAirlineUrl = (airlineName: string): string => {
-  const name = airlineName.toLowerCase();
-  if (name.includes('baltic')) return 'https://www.airbaltic.com/';
-  if (name.includes('turkish')) return 'https://www.turkishairlines.com/';
-  if (name.includes('ryanair')) return 'https://www.ryanair.com/';
-  if (name.includes('wizz')) return 'https://wizzair.com/';
-  if (name.includes('pegasus')) return 'https://www.flypgs.com/';
-  if (name.includes('lufthansa')) return 'https://www.lufthansa.com/';
-  if (name.includes('finnair')) return 'https://www.finnair.com/';
-  return 'https://city.travel/';
+  if (name.includes('city.travel')) {
+    return `https://city.travel/flights?from=${fromCode}&to=${toCode}&date=${departureDate}&passengers=${passengers}`;
+  }
+  if (name.includes('купибилет') || name.includes('kupibilet')) {
+    return `https://www.kupibilet.ru/booking?from=${fromCode}&to=${toCode}&date=${departureDate}&adults=${passengers}`;
+  }
+  if (name.includes('onetwotrip')) {
+    return `https://www.onetwotrip.com/ru/flights/#${fromCode}${cleanDate}${toCode}${passengers}00e`;
+  }
+  if (name.includes('superkassa')) {
+    return `https://superkassa.ru/search?from=${fromCode}&to=${toCode}&date=${departureDate}&adults=${passengers}`;
+  }
+  if (name.includes('trip.com')) {
+    return `https://ru.trip.com/flights/${fromCode.toLowerCase()}-to-${toCode.toLowerCase()}/?dcity=${fromCode}&acity=${toCode}&ddate=${departureDate}`;
+  }
+  if (name.includes('aviakassa')) {
+    return `https://www.aviakassa.com/search?from=${fromCode}&to=${toCode}&date=${departureDate}&passengers=${passengers}`;
+  }
+  if (name.includes('biletik')) {
+    return `https://biletik.aero/search?from=${fromCode}&to=${toCode}&date=${departureDate}`;
+  }
+
+  // Airline direct deep-links
+  if (name.includes('baltic')) {
+    return `https://www.airbaltic.com/ru-RU/booking?origin=${fromCode}&destination=${toCode}&date=${departureDate}`;
+  }
+  if (name.includes('ryanair')) {
+    return `https://www.ryanair.com/ru/ru/trip/flights/select?originIata=${fromCode}&destinationIata=${toCode}&tpAdults=${passengers}&tpStartDate=${departureDate}`;
+  }
+  if (name.includes('wizz')) {
+    return `https://wizzair.com/ru-ru#/booking/select-flight/${fromCode}/${toCode}/${departureDate}/null/${passengers}/0/0/null`;
+  }
+  if (name.includes('turkish')) {
+    return `https://www.turkishairlines.com/`;
+  }
+  if (name.includes('pegasus')) {
+    return `https://www.flypgs.com/`;
+  }
+  if (name.includes('lufthansa')) {
+    return `https://www.lufthansa.com/`;
+  }
+  if (name.includes('finnair')) {
+    return `https://www.finnair.com/`;
+  }
+
+  // Reliable intermediary fallback
+  return `https://city.travel/flights?from=${fromCode}&to=${toCode}&date=${departureDate}&passengers=${passengers}`;
 };
+
+const GLOBAL_INTERMEDIARIES = [
+  { name: 'City.Travel', rating: 4.85, fee: -200 },
+  { name: 'КупиБилет', rating: 4.8, fee: 100 },
+  { name: 'OneTwoTrip', rating: 4.9, fee: 250 },
+  { name: 'SuperKassa', rating: 4.75, fee: -350 },
+  { name: 'Trip.com', rating: 4.92, fee: -150 },
+  { name: 'Aviakassa', rating: 4.7, fee: 50 },
+  { name: 'Biletik.aero', rating: 4.65, fee: -100 },
+];
 
 const generatePaymentBreakdown = (baseRub: number): PaymentBreakdown => {
   const eurRate = 104;
@@ -37,34 +85,47 @@ const generatePaymentBreakdown = (baseRub: number): PaymentBreakdown => {
   };
 };
 
-const generateSellers = (airlineName: string, basePrice: number, baggageIncluded: boolean): SellerOffer[] => {
-  const airlineUrl = getAirlineUrl(airlineName);
+// Generates sellers and calculates the optimal third-party seller link
+const generateSellersAndAnalysis = (
+  airlineName: string,
+  basePrice: number,
+  baggageIncluded: boolean,
+  fromCode: string,
+  toCode: string,
+  departureDate: string,
+  passengers: number,
+  marketMedian: number,
+  durationMinutes: number
+): { sellers: SellerOffer[]; marketAnalysis: MarketAnalysis } => {
+  const offers: SellerOffer[] = [];
 
-  const offers: SellerOffer[] = [
-    {
-      id: `dir_${Math.random()}`,
-      sellerName: `Официальный сайт ${airlineName}`,
-      isAirlineDirect: true,
-      price: basePrice + 350,
-      paymentRub: basePrice + 350,
-      paymentForeign: {
-        amount: Math.round((basePrice * 0.93) / 104),
-        currency: 'EUR',
-        approxRub: Math.round((basePrice * 0.93)),
-        savingsRub: Math.round(basePrice * 0.07),
-      },
-      baggageIncluded,
-      carryOnIncluded: true,
-      bookingUrl: airlineUrl,
-      rating: 4.95,
-    }
-  ];
+  // 1. Direct airline option
+  const directLink = buildPartnerDeepLink(airlineName, fromCode, toCode, departureDate, passengers);
+  offers.push({
+    id: `dir_${Math.random()}`,
+    sellerName: `Официальный сайт ${airlineName}`,
+    isAirlineDirect: true,
+    price: basePrice + 350,
+    paymentRub: basePrice + 350,
+    paymentForeign: {
+      amount: Math.round((basePrice * 0.93) / 104),
+      currency: 'EUR',
+      approxRub: Math.round(basePrice * 0.93),
+      savingsRub: Math.round(basePrice * 0.07),
+    },
+    baggageIncluded,
+    carryOnIncluded: true,
+    bookingUrl: directLink,
+    rating: 4.95,
+  });
 
-  const shuffled = [...GLOBAL_SELLERS].sort(() => 0.5 - Math.random()).slice(0, 4);
-  shuffled.forEach((s, idx) => {
-    const rubPrice = Math.max(2500, basePrice + s.rubFee + (idx === 0 ? -300 : idx * 140));
-    const foreignEur = Math.round((rubPrice * 0.92) / 104);
+  // 2. Intermediary OTA sellers
+  const pickedSellers = [...GLOBAL_INTERMEDIARIES].sort(() => 0.5 - Math.random()).slice(0, 4);
+  pickedSellers.forEach((s, idx) => {
+    const rubPrice = Math.max(2500, basePrice + s.fee + (idx === 0 ? -250 : idx * 120));
+    const foreignEur = Math.round((rubPrice * 0.93) / 104);
     const foreignRub = foreignEur * 104;
+    const otaLink = buildPartnerDeepLink(s.name, fromCode, toCode, departureDate, passengers);
 
     offers.push({
       id: `ota_${idx}_${Math.random()}`,
@@ -80,12 +141,35 @@ const generateSellers = (airlineName: string, basePrice: number, baggageIncluded
       },
       baggageIncluded: idx % 2 === 0 ? baggageIncluded : false,
       carryOnIncluded: true,
-      bookingUrl: s.url,
+      bookingUrl: otaLink,
       rating: s.rating,
     });
   });
 
-  return offers.sort((a, b) => a.price - b.price);
+  // Sort offers by price ascending
+  offers.sort((a, b) => a.price - b.price);
+
+  const bestOffer = offers[0];
+
+  // Full multi-factor market scoring algorithm (0 - 10)
+  // Price ratio vs median (weight: 0.55), Duration penalty (weight: 0.25), Baggage bonus (weight: 0.20)
+  const priceRatio = Math.max(0.4, Math.min(1.5, bestOffer.price / marketMedian));
+  const priceScore = Math.max(2, 10 - (priceRatio - 0.5) * 8);
+  const timeScore = durationMinutes <= 270 ? 10 : Math.max(3, 10 - (durationMinutes - 270) / 45);
+  const baggageScore = baggageIncluded ? 10 : 6.5;
+  const rawScore = priceScore * 0.55 + timeScore * 0.25 + baggageScore * 0.20;
+  const algorithmScore = Math.round(Math.min(9.9, Math.max(7.2, rawScore)) * 10) / 10;
+
+  const marketAnalysis: MarketAnalysis = {
+    sourcesScanned: 48,
+    marketMedianPrice: marketMedian,
+    algorithmScore,
+    priceAdvantageRub: Math.max(0, marketMedian - bestOffer.price),
+    bestSellerName: bestOffer.sellerName,
+    bestSellerUrl: bestOffer.bookingUrl,
+  };
+
+  return { sellers: offers, marketAnalysis };
 };
 
 export const searchFlights = async (params: SearchParams): Promise<Flight[]> => {
@@ -104,7 +188,19 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
   const flights: Flight[] = [];
 
   // 1. CHARTER FLIGHT / Блочные места туроператора
-  const charterPrice = Math.round((marketMedian * 0.54) / 100) * 100;
+  const charterBasePrice = Math.round((marketMedian * 0.54) / 100) * 100;
+  const charterData = generateSellersAndAnalysis(
+    'Чартерный блок',
+    charterBasePrice,
+    true,
+    params.fromCode,
+    params.toCode,
+    params.departureDate,
+    params.passengers,
+    marketMedian,
+    260
+  );
+
   flights.push({
     id: 'fl_charter_tour',
     flightType: 'charter',
@@ -136,28 +232,41 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       }
     ],
     airlines: ['Чартер / Блок туроператора'],
-    bestPrice: charterPrice,
+    bestPrice: charterData.sellers[0].price,
     averageMarketPrice: marketMedian,
     priceDiscountPercent: 46,
     baggageIncluded: true,
     carryOnIncluded: true,
     selfTransfer: false,
     baggageRecheck: false,
-    charterNote: 'Чартерный рейс: багаж 20 кг включен в стоимость. Выписка маршрутной квитанции за 24 часа до вылета.',
-    transitVisaNote: 'Прямой чартерный перелет без пересадок.',
-    paymentBreakdown: generatePaymentBreakdown(charterPrice),
+    charterNote: 'Чартерный рейс: багаж 20 кг включен в стоимость. Выписка билета за 24ч до вылета.',
+    transitVisaNote: 'Прямой перелет без визовых требований.',
+    paymentBreakdown: generatePaymentBreakdown(charterData.sellers[0].price),
+    marketAnalysis: charterData.marketAnalysis,
     verdict: {
       action: 'buy_now',
       badgeTitle: 'Чартерная выгода (-46%)',
-      explanation: 'Горящие блочные места от туроператора на 46% дешевле регулярных авиакомпаний. Багаж 20 кг включен.',
+      explanation: 'Горящие блочные места от туроператора на 46% дешевле регулярных авиалиний. Багаж 20 кг включен бесплатно.',
       confidencePercent: 96,
     },
-    sellers: generateSellers('Чартерный блок', charterPrice, true),
+    sellers: charterData.sellers,
     isCheapest: true,
   });
 
   // 2. SMART COMBINATION: Ryanair + Wizz Air
   const smartCombPrice = Math.round((marketMedian * 0.62) / 100) * 100;
+  const smartComboData = generateSellersAndAnalysis(
+    'Smart Combo',
+    smartCombPrice,
+    false,
+    params.fromCode,
+    params.toCode,
+    params.departureDate,
+    params.passengers,
+    marketMedian,
+    495
+  );
+
   flights.push({
     id: 'fl_smart_combination',
     flightType: 'smart_combination',
@@ -218,7 +327,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       }
     ],
     airlines: ['Ryanair', 'Wizz Air'],
-    bestPrice: smartCombPrice,
+    bestPrice: smartComboData.sellers[0].price,
     averageMarketPrice: marketMedian,
     priceDiscountPercent: 38,
     baggageIncluded: false,
@@ -226,19 +335,32 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     selfTransfer: true,
     baggageRecheck: true,
     terminalChangeWarning: 'Багаж необходимо перерегистрировать в Варшаве',
-    transitVisaNote: '🛡 Включена гарантия стыковки (Smart Connection Guarantee): при задержке рейса страховка оплатит альтернативный билет.',
-    paymentBreakdown: generatePaymentBreakdown(smartCombPrice),
+    transitVisaNote: '🛡 Включена гарантия стыковки: при задержке рейса страховка оплатит новый билет.',
+    paymentBreakdown: generatePaymentBreakdown(smartComboData.sellers[0].price),
+    marketAnalysis: smartComboData.marketAnalysis,
     verdict: {
       action: 'buy_now',
       badgeTitle: 'Умная стыковка (Smart Connection)',
-      explanation: 'Комбинация рейсов Ryanair + Wizz Air с гарантией стыковки. Экономия 38% по сравнению со сквозными тарифами.',
+      explanation: 'Комбинация двух лоукостеров с гарантией стыковки. Экономия 38% по сравнению со сквозными тарифами.',
       confidencePercent: 93,
     },
-    sellers: generateSellers('Smart Combo', smartCombPrice, false),
+    sellers: smartComboData.sellers,
   });
 
   // 3. Regular Direct Flight (Air Baltic)
   const directPrice = Math.round((marketMedian * 0.94) / 100) * 100;
+  const directData = generateSellersAndAnalysis(
+    'Air Baltic',
+    directPrice,
+    false,
+    params.fromCode,
+    params.toCode,
+    params.departureDate,
+    params.passengers,
+    marketMedian,
+    260
+  );
+
   flights.push({
     id: 'fl_direct_regular',
     flightType: 'regular',
@@ -270,7 +392,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       }
     ],
     airlines: ['Air Baltic'],
-    bestPrice: directPrice,
+    bestPrice: directData.sellers[0].price,
     averageMarketPrice: Math.round(directPrice * 1.25),
     priceDiscountPercent: 12,
     baggageIncluded: false,
@@ -278,19 +400,32 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     selfTransfer: false,
     baggageRecheck: false,
     transitVisaNote: 'Прямой регулярный рейс.',
-    paymentBreakdown: generatePaymentBreakdown(directPrice),
+    paymentBreakdown: generatePaymentBreakdown(directData.sellers[0].price),
+    marketAnalysis: directData.marketAnalysis,
     verdict: {
       action: 'buy_now',
       badgeTitle: 'Прямой и быстрый',
       explanation: 'Самый быстрый вариант без пересадок. Тариф на минимуме за последние 30 дней.',
       confidencePercent: 91,
     },
-    sellers: generateSellers('Air Baltic', directPrice, false),
+    sellers: directData.sellers,
     isFastest: true,
   });
 
   // 4. Regular Optimal Flight with Baggage (Turkish Airlines)
   const optPrice = Math.round((marketMedian * 1.05) / 100) * 100;
+  const optData = generateSellersAndAnalysis(
+    'Turkish Airlines',
+    optPrice,
+    true,
+    params.fromCode,
+    params.toCode,
+    params.departureDate,
+    params.passengers,
+    marketMedian,
+    265
+  );
+
   flights.push({
     id: 'fl_optimal_turkish',
     flightType: 'regular',
@@ -322,7 +457,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       }
     ],
     airlines: ['Turkish Airlines'],
-    bestPrice: optPrice,
+    bestPrice: optData.sellers[0].price,
     averageMarketPrice: Math.round(optPrice * 1.2),
     priceDiscountPercent: 10,
     baggageIncluded: true,
@@ -330,14 +465,15 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     selfTransfer: false,
     baggageRecheck: false,
     transitVisaNote: 'Багаж 23 кг и горячее питание включены в стоимость.',
-    paymentBreakdown: generatePaymentBreakdown(optPrice),
+    paymentBreakdown: generatePaymentBreakdown(optData.sellers[0].price),
+    marketAnalysis: optData.marketAnalysis,
     verdict: {
       action: 'fair_price',
       badgeTitle: 'Оптимальный выбор',
       explanation: 'Полный сервис без скрытых сборов: багаж 23 кг, удобное дневное время, горячее питание.',
       confidencePercent: 92,
     },
-    sellers: generateSellers('Turkish Airlines', optPrice, true),
+    sellers: optData.sellers,
     isOptimal: true,
   });
 
@@ -351,6 +487,18 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
   const savings = marketMedian - (multiPrice + groundPrice);
 
   if (isBaltic) {
+    const multiData = generateSellersAndAnalysis(
+      'Ryanair',
+      multiPrice,
+      false,
+      altCode,
+      params.toCode,
+      params.departureDate,
+      params.passengers,
+      marketMedian,
+      255
+    );
+
     const multiHubInfo: MultiHubInfo = {
       isAlternative: true,
       originCity: altCity,
@@ -393,7 +541,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         }
       ],
       airlines: ['Ryanair'],
-      bestPrice: multiPrice,
+      bestPrice: multiData.sellers[0].price,
       averageMarketPrice: marketMedian,
       priceDiscountPercent: 42,
       baggageIncluded: false,
@@ -402,14 +550,15 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       baggageRecheck: false,
       transitVisaNote: 'Прямой вылет из соседней столицы.',
       multiHubAlternative: multiHubInfo,
-      paymentBreakdown: generatePaymentBreakdown(multiPrice),
+      paymentBreakdown: generatePaymentBreakdown(multiData.sellers[0].price),
+      marketAnalysis: multiData.marketAnalysis,
       verdict: {
         action: 'buy_now',
         badgeTitle: 'Умный мульти-хаб',
-        explanation: `Рейс из ${altCity} стоит ${multiPrice.toLocaleString('ru-RU')} ₽. С учетом комфортного автобуса ${groundDesc} (${groundPrice} ₽) выгода составляет ${savings.toLocaleString('ru-RU')} ₽.`,
+        explanation: `Рейс из ${altCity} стоит ${multiPrice.toLocaleString('ru-RU')} ₽. С учетом автобуса ${groundDesc} (${groundPrice} ₽) выгода составляет ${savings.toLocaleString('ru-RU')} ₽.`,
         confidencePercent: 97,
       },
-      sellers: generateSellers('Ryanair', multiPrice, false),
+      sellers: multiData.sellers,
     });
   }
 

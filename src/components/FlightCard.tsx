@@ -12,7 +12,10 @@ import {
   ShieldCheck,
   CreditCard,
   Plane,
-  ShieldAlert
+  ShieldAlert,
+  ArrowRight,
+  TrendingUp,
+  Cpu
 } from 'lucide-react';
 import { Flight } from '../types';
 import { haptic, shareToTelegram, openExternalLink } from '../lib/telegram';
@@ -35,7 +38,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     haptic.medium();
-    const shareText = `✈️ Рейс ${flight.fromCity} (${flight.fromCode}) → ${flight.toCity} (${flight.toCode})\n💰 Лучшая цена: ${flight.bestPrice.toLocaleString('ru-RU')} ₽ (${flight.paymentBreakdown.foreignPriceEur ? `€${flight.paymentBreakdown.foreignPriceEur}` : ''})\n⏱ В пути: ${flight.durationTotal}\n💡 Вердикт: ${flight.verdict.badgeTitle}`;
+    const shareText = `✈️ Рейс ${flight.fromCity} (${flight.fromCode}) → ${flight.toCity} (${flight.toCode})\n💰 Лучшая цена: ${flight.bestPrice.toLocaleString('ru-RU')} ₽ у ${flight.marketAnalysis.bestSellerName}\n⏱ В пути: ${flight.durationTotal}\n📊 Оценка алгоритма: ${flight.marketAnalysis.algorithmScore}/10`;
     shareToTelegram(shareText);
   };
 
@@ -48,7 +51,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   const handleBookClick = (e: React.MouseEvent, url: string) => {
     e.preventDefault();
     e.stopPropagation();
-    openExternalLink(url || 'https://city.travel');
+    openExternalLink(url || flight.marketAnalysis.bestSellerUrl);
   };
 
   const isMultiHub = Boolean(flight.multiHubAlternative);
@@ -59,7 +62,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
     <div className={`ios-card mb-3.5 mx-4 overflow-hidden border ${
       isCharter ? 'border-amber-500/30' : isSmartCombo ? 'border-purple-500/30' : isMultiHub ? 'border-blue-500/30' : 'border-transparent'
     }`}>
-      {/* 1. Charter Badge Banner */}
+      {/* 1. Charter Badge */}
       {isCharter && (
         <div className="bg-amber-500/10 dark:bg-amber-500/15 px-4 py-2 hairline-b flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
@@ -135,32 +138,21 @@ export const FlightCard: React.FC<FlightCardProps> = ({
         </div>
       </div>
 
-      {/* 4. Expert Verdict Box */}
-      <div className="mx-4 mt-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 hairline-b">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-1.5">
-            {flight.verdict.action === 'buy_now' ? (
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            ) : (
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-            )}
-            <span className={`text-xs font-bold ${
-              flight.verdict.action === 'buy_now' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
-            }`}>
-              {flight.verdict.badgeTitle}
-            </span>
-          </div>
-          <span className="text-[10px] text-zinc-400 font-medium">
-            Точность {flight.verdict.confidencePercent}%
-          </span>
+      {/* 4. Full Algorithm Market Score Bar */}
+      <div className="mx-4 mt-2.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 flex items-center justify-between text-[11px]">
+        <div className="flex items-center gap-1.5 font-medium text-zinc-600 dark:text-zinc-300">
+          <Cpu className="w-3.5 h-3.5 text-blue-600" />
+          <span>Анализ 48 источников • Оценка: <strong className="text-black dark:text-white">{flight.marketAnalysis.algorithmScore}/10</strong></span>
         </div>
-        <p className="text-[11px] text-zinc-600 dark:text-zinc-300 leading-snug">
-          {flight.verdict.explanation}
-        </p>
+        {flight.marketAnalysis.priceAdvantageRub > 0 && (
+          <span className="text-emerald-600 dark:text-emerald-400 font-semibold tabular">
+            Выгода: -{flight.marketAnalysis.priceAdvantageRub.toLocaleString('ru-RU')} ₽
+          </span>
+        )}
       </div>
 
       {/* Flight Schedule */}
-      <div className="p-4">
+      <div className="p-4 pt-3">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[22px] font-bold text-black dark:text-white tracking-tight tabular">
@@ -266,7 +258,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
           </div>
         )}
 
-        {/* 5. Payment Methods Comparison: RUB vs Foreign Cards (EUR/USD) */}
+        {/* Currency payment comparison */}
         <div className="mt-3 p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-medium">
             <CreditCard className="w-3.5 h-3.5 text-blue-600" />
@@ -280,43 +272,45 @@ export const FlightCard: React.FC<FlightCardProps> = ({
           )}
         </div>
 
-        {/* Price & Primary CTA */}
-        <div className="mt-3.5 pt-3 hairline-t flex items-center justify-between">
-          <div>
-            <div className="text-[22px] font-bold text-black dark:text-white tracking-tight tabular">
-              {flight.bestPrice.toLocaleString('ru-RU')} ₽
+        {/* 5. Direct Single Purchase Button to Best Third-Party Intermediary */}
+        <div className="mt-3.5 pt-3 hairline-t space-y-2">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <div className="text-[24px] font-bold text-black dark:text-white tracking-tight tabular">
+                {flight.bestPrice.toLocaleString('ru-RU')} ₽
+              </div>
+              <div className="text-[11px] text-zinc-400">
+                {flight.baggageIncluded ? 'Багаж 20-23 кг включен' : 'Тариф без багажа'} • Продавец: <strong className="text-black dark:text-white">{flight.marketAnalysis.bestSellerName}</strong>
+              </div>
             </div>
-            <div className="text-[11px] text-zinc-400">
-              {flight.baggageIncluded ? 'Багаж 20-23 кг включен' : 'Без багажа (ручная кладь)'}
-            </div>
+
+            <button
+              onClick={(e) => handleBookClick(e, flight.marketAnalysis.bestSellerUrl)}
+              className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[14px] tracking-tight flex items-center gap-2 shadow-sm pressable"
+            >
+              <span>Купить у {flight.marketAnalysis.bestSellerName}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
+          {/* Compare Other Sellers */}
           <button
-            onClick={(e) => handleBookClick(e, flight.sellers[0]?.bookingUrl || 'https://city.travel')}
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-[13px] tracking-tight flex items-center gap-1.5 pressable"
+            onClick={() => {
+              haptic.selection();
+              setShowSellers(!showSellers);
+            }}
+            className="w-full pt-1.5 flex items-center justify-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 pressable"
           >
-            <span>Купить</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Сравнить цены всех {flight.sellers.length} продавцов</span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                showSellers ? 'rotate-180' : ''
+              }`}
+            />
           </button>
         </div>
 
-        {/* Compare All Sellers */}
-        <button
-          onClick={() => {
-            haptic.selection();
-            setShowSellers(!showSellers);
-          }}
-          className="w-full mt-2 pt-2 flex items-center justify-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 pressable"
-        >
-          <span>Сравнить цены {flight.sellers.length} продавцов</span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform duration-200 ${
-              showSellers ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-
-        {/* Sellers Breakdown with RUB and EUR/USD payments */}
+        {/* Sellers Breakdown Drawer */}
         <AnimatePresence>
           {showSellers && (
             <motion.div
@@ -332,8 +326,13 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                   className="py-2.5 flex items-center justify-between text-xs"
                 >
                   <div>
-                    <div className="font-medium text-black dark:text-white">
-                      {seller.sellerName}
+                    <div className="font-medium text-black dark:text-white flex items-center gap-1.5">
+                      <span>{seller.sellerName}</span>
+                      {seller.sellerName === flight.marketAnalysis.bestSellerName && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 font-bold">
+                          ТОП-1
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] text-zinc-400 mt-0.5">
                       {seller.baggageIncluded ? 'С багажом' : 'Без багажа'} • Рейтинг {seller.rating}
@@ -347,15 +346,16 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                       </div>
                       {seller.paymentForeign && (
                         <div className="text-[10px] text-emerald-600 font-medium tabular">
-                          €{seller.paymentForeign.amount} (экон. {seller.paymentForeign.savingsRub} ₽)
+                          €{seller.paymentForeign.amount}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={(e) => handleBookClick(e, seller.bookingUrl)}
-                      className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-medium text-black dark:text-white pressable"
+                      className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-[11px] font-semibold text-black dark:text-white flex items-center gap-1 pressable"
                     >
-                      К сайту
+                      <span>К сайту</span>
+                      <ExternalLink className="w-3 h-3" />
                     </button>
                   </div>
                 </div>

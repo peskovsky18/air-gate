@@ -35,7 +35,7 @@ export interface LayoverInfo {
   transitVisaRequired?: boolean;
   transitVisaNote?: string;
   baggageRecheck?: boolean;
-  hasConnectionGuarantee?: boolean; // Smart connection insurance
+  hasConnectionGuarantee?: boolean;
 }
 
 export interface MultiHubInfo {
@@ -58,10 +58,10 @@ export interface PriceVerdict {
 }
 
 export interface PaymentBreakdown {
-  rubPrice: number;             // Оплата МИР / СБП / картой РФ
-  foreignPriceUsd?: number;     // Оплата картой зарубежного банка USD
-  foreignPriceEur?: number;     // Оплата картой зарубежного банка EUR
-  foreignCurrencySavingsRub?: number; // e.g. 800 ₽ экономия при оплате в EUR
+  rubPrice: number;
+  foreignPriceUsd?: number;
+  foreignPriceEur?: number;
+  foreignCurrencySavingsRub?: number;
 }
 
 export interface SellerOffer {
@@ -77,9 +77,18 @@ export interface SellerOffer {
   rating: number;
 }
 
+export interface MarketAnalysis {
+  sourcesScanned: number;          // e.g. 48 источников
+  marketMedianPrice: number;       // медиана цен
+  algorithmScore: number;          // 0 - 10
+  priceAdvantageRub: number;       // выгода по отношению к медиане рынка
+  bestSellerName: string;          // имя лучшего стороннего продавца
+  bestSellerUrl: string;           // прямая ссылка на покупку у продавца
+}
+
 export interface Flight {
   id: string;
-  flightType: 'regular' | 'charter' | 'smart_combination'; // Regular, Charter, or Smart Connection
+  flightType: 'regular' | 'charter' | 'smart_combination';
   fromCode: string;
   fromCity: string;
   toCode: string;
@@ -100,7 +109,10 @@ export interface Flight {
   carryOnIncluded: boolean;
   sellers: SellerOffer[];
 
-  // Payment methods comparison
+  // Algorithm Market Analysis
+  marketAnalysis: MarketAnalysis;
+
+  // Payment breakdown
   paymentBreakdown: PaymentBreakdown;
 
   // Features
