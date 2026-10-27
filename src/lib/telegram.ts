@@ -22,7 +22,6 @@ export const initTelegramApp = () => {
   try {
     tg.ready();
     tg.expand();
-    // Enable closing confirmation to prevent accidental loss
     if (tg.enableClosingConfirmation) {
       tg.enableClosingConfirmation();
     }
@@ -30,6 +29,25 @@ export const initTelegramApp = () => {
     console.warn('Telegram WebApp init warning:', e);
   }
   return tg;
+};
+
+// Open external link properly in Telegram WebApp
+export const openExternalLink = (url: string) => {
+  if (!url) return;
+  haptic.medium();
+
+  const tg = getTelegramWebApp();
+  if (tg && typeof tg.openLink === 'function') {
+    try {
+      tg.openLink(url, { try_instant_view: false });
+      return;
+    } catch (e) {
+      console.warn('Telegram openLink error:', e);
+    }
+  }
+
+  // Fallback for regular browser
+  window.open(url, '_blank', 'noopener,noreferrer');
 };
 
 // Haptic feedback with safe fallback
@@ -79,7 +97,6 @@ export const getTelegramUser = () => {
       photoUrl: user.photo_url || null,
     };
   }
-  // Default mock user for browser preview
   return {
     id: 'tg_guest_7721',
     firstName: 'Алексей',

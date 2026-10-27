@@ -2,14 +2,26 @@ import { Flight, SearchParams, SellerOffer, DatePriceHeatmap, LayoverInfo, Fligh
 import { getAirportByCode, getNearbyAirports } from '../data/airports';
 
 const GLOBAL_SELLERS = [
-  { name: 'City.Travel', rating: 4.8, rubFee: 0, foreignFee: -600 },
-  { name: 'КупиБилет', rating: 4.7, rubFee: 150, foreignFee: -400 },
-  { name: 'OneTwoTrip', rating: 4.9, rubFee: 290, foreignFee: -300 },
-  { name: 'SuperKassa', rating: 4.6, rubFee: -200, foreignFee: -800 },
-  { name: 'Aviakassa', rating: 4.7, rubFee: 80, foreignFee: -500 },
-  { name: 'Trip.com', rating: 4.9, rubFee: 120, foreignFee: -1100 },
-  { name: 'Biletik.aero', rating: 4.6, rubFee: -150, foreignFee: -700 },
+  { name: 'City.Travel', rating: 4.8, rubFee: 0, url: 'https://city.travel/' },
+  { name: 'КупиБилет', rating: 4.7, rubFee: 150, url: 'https://www.kupibilet.ru/' },
+  { name: 'OneTwoTrip', rating: 4.9, rubFee: 290, url: 'https://www.onetwotrip.com/' },
+  { name: 'SuperKassa', rating: 4.6, rubFee: -200, url: 'https://superkassa.ru/' },
+  { name: 'Aviakassa', rating: 4.7, rubFee: 80, url: 'https://www.aviakassa.com/' },
+  { name: 'Trip.com', rating: 4.9, rubFee: 120, url: 'https://ru.trip.com/flights/' },
+  { name: 'Biletik.aero', rating: 4.6, rubFee: -150, url: 'https://biletik.aero/' },
 ];
+
+const getAirlineUrl = (airlineName: string): string => {
+  const name = airlineName.toLowerCase();
+  if (name.includes('baltic')) return 'https://www.airbaltic.com/';
+  if (name.includes('turkish')) return 'https://www.turkishairlines.com/';
+  if (name.includes('ryanair')) return 'https://www.ryanair.com/';
+  if (name.includes('wizz')) return 'https://wizzair.com/';
+  if (name.includes('pegasus')) return 'https://www.flypgs.com/';
+  if (name.includes('lufthansa')) return 'https://www.lufthansa.com/';
+  if (name.includes('finnair')) return 'https://www.finnair.com/';
+  return 'https://city.travel/';
+};
 
 const generatePaymentBreakdown = (baseRub: number): PaymentBreakdown => {
   const eurRate = 104;
@@ -26,7 +38,7 @@ const generatePaymentBreakdown = (baseRub: number): PaymentBreakdown => {
 };
 
 const generateSellers = (airlineName: string, basePrice: number, baggageIncluded: boolean): SellerOffer[] => {
-  const payment = generatePaymentBreakdown(basePrice);
+  const airlineUrl = getAirlineUrl(airlineName);
 
   const offers: SellerOffer[] = [
     {
@@ -43,7 +55,7 @@ const generateSellers = (airlineName: string, basePrice: number, baggageIncluded
       },
       baggageIncluded,
       carryOnIncluded: true,
-      bookingUrl: 'https://airline.com/direct',
+      bookingUrl: airlineUrl,
       rating: 4.95,
     }
   ];
@@ -68,7 +80,7 @@ const generateSellers = (airlineName: string, basePrice: number, baggageIncluded
       },
       baggageIncluded: idx % 2 === 0 ? baggageIncluded : false,
       carryOnIncluded: true,
-      bookingUrl: 'https://ota.com/deal',
+      bookingUrl: s.url,
       rating: s.rating,
     });
   });
@@ -91,7 +103,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
 
   const flights: Flight[] = [];
 
-  // 1. CHARTER FLIGHT / Блочные места туроператора (на 45% дешевле, багаж 20 кг включен)
+  // 1. CHARTER FLIGHT / Блочные места туроператора
   const charterPrice = Math.round((marketMedian * 0.54) / 100) * 100;
   flights.push({
     id: 'fl_charter_tour',
@@ -144,7 +156,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     isCheapest: true,
   });
 
-  // 2. SMART COMBINATION: Стыковка двух нестыкуемых лоукостеров с гарантией стыковки
+  // 2. SMART COMBINATION: Ryanair + Wizz Air
   const smartCombPrice = Math.round((marketMedian * 0.62) / 100) * 100;
   flights.push({
     id: 'fl_smart_combination',
@@ -329,7 +341,7 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     isOptimal: true,
   });
 
-  // 5. Smart Multi-Hub Route (Riga ↔ Tallinn / Vilnius)
+  // 5. Smart Multi-Hub Route (Riga ↔ Tallinn)
   const isBaltic = ['RIX', 'TLL', 'VNO', 'HEL'].includes(params.fromCode);
   const altCity = params.fromCode === 'RIX' ? 'Таллин' : 'Рига';
   const altCode = params.fromCode === 'RIX' ? 'TLL' : 'RIX';

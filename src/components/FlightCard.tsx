@@ -15,7 +15,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { Flight } from '../types';
-import { haptic, shareToTelegram } from '../lib/telegram';
+import { haptic, shareToTelegram, openExternalLink } from '../lib/telegram';
 
 interface FlightCardProps {
   flight: Flight;
@@ -45,6 +45,12 @@ export const FlightCard: React.FC<FlightCardProps> = ({
     onToggleFavorite(flight.id);
   };
 
+  const handleBookClick = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openExternalLink(url || 'https://city.travel');
+  };
+
   const isMultiHub = Boolean(flight.multiHubAlternative);
   const isCharter = flight.flightType === 'charter';
   const isSmartCombo = flight.flightType === 'smart_combination';
@@ -71,7 +77,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
         <div className="bg-purple-500/10 dark:bg-purple-500/15 px-4 py-2 hairline-b flex items-center gap-2 text-xs">
           <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
           <span className="font-semibold text-purple-700 dark:text-purple-300">
-            Гарантия стыковки (Smart Connection): при задержке рейса страховка покроет новый билет
+            Гарантия стыковки (Smart Connection): задержка рейса застрахована
           </span>
         </div>
       )}
@@ -285,16 +291,13 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             </div>
           </div>
 
-          <a
-            href={flight.sellers[0]?.bookingUrl || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => haptic.medium()}
+          <button
+            onClick={(e) => handleBookClick(e, flight.sellers[0]?.bookingUrl || 'https://city.travel')}
             className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-[13px] tracking-tight flex items-center gap-1.5 pressable"
           >
             <span>Купить</span>
             <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          </button>
         </div>
 
         {/* Compare All Sellers */}
@@ -348,15 +351,12 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                         </div>
                       )}
                     </div>
-                    <a
-                      href={seller.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => haptic.light()}
+                    <button
+                      onClick={(e) => handleBookClick(e, seller.bookingUrl)}
                       className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-medium text-black dark:text-white pressable"
                     >
                       К сайту
-                    </a>
+                    </button>
                   </div>
                 </div>
               ))}
