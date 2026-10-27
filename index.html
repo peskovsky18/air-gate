@@ -3,16 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <meta name="format-detection" content="telephone=no" />
     <title>AIR gate</title>
-    <!-- Dark Mode Sync Script -->
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Immediate Dark Mode Sync Script -->
     <script>
       (function() {
         try {
           var tg = window.Telegram && window.Telegram.WebApp;
-          var isDark = (tg && tg.colorScheme === 'dark') || (!tg && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (tg) {
+            if (typeof tg.ready === 'function') tg.ready();
+            if (typeof tg.expand === 'function') tg.expand();
+          }
+          var isDark = (tg && tg.colorScheme === 'dark') || (!tg && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
           if (isDark) {
             document.documentElement.classList.add('dark');
           } else {
@@ -21,13 +30,11 @@
         } catch(e) {}
       })();
     </script>
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="./assets/index-OMPzhg7n.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-C0EMXmDk.css">
+    <script type="module" crossorigin src="./assets/index-BTJChAUp-1793126059261.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-ByU4MjWi-1793126059261.css">
   </head>
   <body class="bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white antialiased select-none overflow-x-hidden min-h-screen">
     <div id="root"></div>
