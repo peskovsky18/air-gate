@@ -76,10 +76,10 @@ export const buildPartnerDeepLink = (
 };
 
 const GLOBAL_INTERMEDIARIES = [
-  { name: 'City.Travel', rating: 4.88, feeMultiplier: 0.97 },
+  { name: 'City.Travel', rating: 4.88, feeMultiplier: 0.96 },
   { name: 'КупиБилет', rating: 4.82, feeMultiplier: 1.01 },
   { name: 'OneTwoTrip', rating: 4.91, feeMultiplier: 1.02 },
-  { name: 'SuperKassa', rating: 4.79, feeMultiplier: 0.96 },
+  { name: 'SuperKassa', rating: 4.79, feeMultiplier: 0.95 },
   { name: 'Trip.com', rating: 4.93, feeMultiplier: 0.98 },
   { name: 'Aviakassa', rating: 4.72, feeMultiplier: 1.0 },
   { name: 'Biletik.aero', rating: 4.68, feeMultiplier: 0.99 },
@@ -279,14 +279,15 @@ const getCorridorProfile = (fromCode: string, toCode: string): CorridorProfile =
 };
 
 export const searchFlights = async (params: SearchParams): Promise<Flight[]> => {
-  // Simulate realistic low-latency market aggregation
-  await new Promise(res => setTimeout(res, 380));
+  // Realistic low-latency market aggregation
+  await new Promise(res => setTimeout(res, 350));
 
   const parsedDate = parseYMD(params.departureDate);
   const dow = new Date(parsedDate.year, parsedDate.month, parsedDate.day).getDay(); // 0 Sun, 6 Sat
   const isWeekend = dow === 0 || dow === 6 || dow === 5;
-  const dayMultiplier = isWeekend ? 1.14 : 0.94;
+  const dayMultiplier = isWeekend ? 1.15 : 0.93;
   const paxMultiplier = Math.max(1, params.passengers || 1);
+  const daySeed = parsedDate.day;
 
   // If user searched "ANY" ("Куда угодно"):
   if (params.toCode === 'ANY') {
@@ -296,9 +297,9 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     const destinations = [
       { code: 'IST', city: 'Стамбул', base: 13400, carrier: 'Pegasus', time: '4ч 10м' },
       { code: 'DXB', city: 'Дубай', base: 22900, carrier: 'Flydubai', time: '5ч 20м' },
+      { code: 'FCO', city: 'Рим', base: 15600, carrier: 'Wizz Air', time: '3ч 15м' },
       { code: 'EVN', city: 'Ереван', base: 9800, carrier: 'FlyOne Armenia', time: '3ч 45м' },
       { code: 'TBS', city: 'Тбилиси', base: 11900, carrier: 'Georgian Airways', time: '3ч 55м' },
-      { code: 'FCO', city: 'Рим', base: 15600, carrier: 'Wizz Air', time: '3ч 15м' },
       { code: 'TLL', city: 'Таллин', base: 5900, carrier: 'Air Baltic', time: '55м' },
     ].filter(d => d.code !== params.fromCode);
 
@@ -317,16 +318,22 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         180
       );
 
+      const depH = 7 + ((daySeed + idx * 2) % 6);
+      const depM = ((daySeed * 5 + idx * 10) % 12) * 5;
+      const depTime = `${String(depH).padStart(2, '0')}:${String(depM).padStart(2, '0')}`;
+      const arrH = (depH + 4) % 24;
+      const arrTime = `${String(arrH).padStart(2, '0')}:${String(depM).padStart(2, '0')}`;
+
       return {
-        id: `any_${dest.code}_${idx}`,
+        id: `any_${dest.code}_${params.departureDate}_${idx}`,
         flightType: 'regular',
         fromCode: params.fromCode,
         fromCity,
         toCode: dest.code,
         toCity: dest.city,
         departureDate: params.departureDate,
-        departureTime: '10:30',
-        arrivalTime: '14:40',
+        departureTime: depTime,
+        arrivalTime: arrTime,
         durationTotal: dest.time,
         durationMinutes: 220,
         stopsCount: 0,
@@ -337,10 +344,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
             arrivalAirport: dest.code,
             departureCity: fromCity,
             arrivalCity: dest.city,
-            departureTime: '10:30',
-            arrivalTime: '14:40',
+            departureTime: depTime,
+            arrivalTime: arrTime,
             duration: dest.time,
-            flightNumber: `FL-${300 + idx * 12}`,
+            flightNumber: `FL-${300 + idx * 12 + (daySeed % 50)}`,
             airline: dest.carrier,
             aircraft: 'Airbus A320neo',
           }
@@ -379,9 +386,16 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
 
   const flights: Flight[] = [];
 
+  // Dynamic departure schedule calculator based on date
+  const depH1 = 6 + (daySeed % 3);
+  const depM1 = ((daySeed * 7) % 12) * 5;
+  const depTime1 = `${String(depH1).padStart(2, '0')}:${String(depM1).padStart(2, '0')}`;
+  const arrTotal1 = depH1 * 60 + depM1 + corridor.durationMinutes;
+  const arrTime1 = `${String(Math.floor(arrTotal1 / 60) % 24).padStart(2, '0')}:${String(arrTotal1 % 60).padStart(2, '0')}`;
+
   // 1. CHEAPEST CHARTER / LOW-COST DEAL
   const charterPrice = Math.round((baseMedian * 0.58) / 100) * 100;
-  const primaryLowcost = corridor.lowcostAirlines[0] || 'Победа';
+  const primaryLowcost = corridor.lowcostAirlines[0] || 'Ryanair';
   const charterData = generateSellersAndAnalysis(
     primaryLowcost,
     charterPrice,
@@ -395,15 +409,15 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
   );
 
   flights.push({
-    id: `fl_charter_${params.fromCode}_${params.toCode}`,
+    id: `fl_charter_${params.fromCode}_${params.toCode}_${params.departureDate}`,
     flightType: 'charter',
     fromCode: params.fromCode,
     fromCity,
     toCode: params.toCode,
     toCity,
     departureDate: params.departureDate,
-    departureTime: '06:10',
-    arrivalTime: '10:30',
+    departureTime: depTime1,
+    arrivalTime: arrTime1,
     durationTotal: corridor.durationText,
     durationMinutes: corridor.durationMinutes,
     stopsCount: 0,
@@ -416,10 +430,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalCity: toCity,
         departureTerminal: 'T1',
         arrivalTerminal: 'T2',
-        departureTime: '06:10',
-        arrivalTime: '10:30',
+        departureTime: depTime1,
+        arrivalTime: arrTime1,
         duration: corridor.durationText,
-        flightNumber: 'WZ-8411',
+        flightNumber: `WZ-${8400 + (daySeed % 90)}`,
         airline: primaryLowcost,
         aircraft: 'Boeing 737-800',
       }
@@ -463,17 +477,23 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     corridor.durationMinutes + 180
   );
 
+  const depH2 = 8 + (daySeed % 3);
+  const depM2 = ((daySeed * 9) % 12) * 5;
+  const depTime2 = `${String(depH2).padStart(2, '0')}:${String(depM2).padStart(2, '0')}`;
+  const arrTotal2 = depH2 * 60 + depM2 + corridor.durationMinutes + 180;
+  const arrTime2 = `${String(Math.floor(arrTotal2 / 60) % 24).padStart(2, '0')}:${String(arrTotal2 % 60).padStart(2, '0')}`;
+
   flights.push({
-    id: `fl_combo_${params.fromCode}_${params.toCode}`,
+    id: `fl_combo_${params.fromCode}_${params.toCode}_${params.departureDate}`,
     flightType: 'smart_combination',
     fromCode: params.fromCode,
     fromCity,
     toCode: params.toCode,
     toCity,
     departureDate: params.departureDate,
-    departureTime: '08:40',
-    arrivalTime: '16:15',
-    durationTotal: `${Math.floor((corridor.durationMinutes + 180) / 60)}ч ${(corridor.durationMinutes + 180) % 60}м (умная стыковка)`,
+    departureTime: depTime2,
+    arrivalTime: arrTime2,
+    durationTotal: `${Math.floor((corridor.durationMinutes + 180) / 60)}ч ${(corridor.durationMinutes + 180) % 60}м (стыковка)`,
     durationMinutes: corridor.durationMinutes + 180,
     stopsCount: 1,
     hasConnectionGuarantee: true,
@@ -500,10 +520,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalCity: transitHub.city,
         departureTerminal: 'T1',
         arrivalTerminal: 'T1',
-        departureTime: '08:40',
-        arrivalTime: '10:55',
+        departureTime: depTime2,
+        arrivalTime: `${String((depH2 + 2) % 24).padStart(2, '0')}:${String((depM2 + 15) % 60).padStart(2, '0')}`,
         duration: '2ч 15м',
-        flightNumber: 'FR-2412',
+        flightNumber: `FR-${2400 + (daySeed % 80)}`,
         airline: comboAirline1,
         aircraft: 'Boeing 737-800',
       },
@@ -514,10 +534,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalCity: toCity,
         departureTerminal: 'T1',
         arrivalTerminal: 'T2',
-        departureTime: '13:35',
-        arrivalTime: '16:15',
+        departureTime: `${String((depH2 + 5) % 24).padStart(2, '0')}:${String(depM2).padStart(2, '0')}`,
+        arrivalTime: arrTime2,
         duration: '2ч 40м',
-        flightNumber: 'W6-6102',
+        flightNumber: `W6-${6100 + (daySeed % 80)}`,
         airline: comboAirline2,
         aircraft: 'Airbus A321neo',
       }
@@ -558,16 +578,22 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     corridor.durationMinutes
   );
 
+  const depH3 = 11 + (daySeed % 2);
+  const depM3 = ((daySeed * 11) % 12) * 5;
+  const depTime3 = `${String(depH3).padStart(2, '0')}:${String(depM3).padStart(2, '0')}`;
+  const arrTotal3 = depH3 * 60 + depM3 + corridor.durationMinutes;
+  const arrTime3 = `${String(Math.floor(arrTotal3 / 60) % 24).padStart(2, '0')}:${String(arrTotal3 % 60).padStart(2, '0')}`;
+
   flights.push({
-    id: `fl_direct_${params.fromCode}_${params.toCode}`,
+    id: `fl_direct_${params.fromCode}_${params.toCode}_${params.departureDate}`,
     flightType: 'regular',
     fromCode: params.fromCode,
     fromCity,
     toCode: params.toCode,
     toCity,
     departureDate: params.departureDate,
-    departureTime: '11:25',
-    arrivalTime: '15:15',
+    departureTime: depTime3,
+    arrivalTime: arrTime3,
     durationTotal: corridor.durationText,
     durationMinutes: corridor.durationMinutes,
     stopsCount: 0,
@@ -580,10 +606,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalCity: toCity,
         departureTerminal: 'T1',
         arrivalTerminal: 'T1',
-        departureTime: '11:25',
-        arrivalTime: '15:15',
+        departureTime: depTime3,
+        arrivalTime: arrTime3,
         duration: corridor.durationText,
-        flightNumber: 'BT-420',
+        flightNumber: `BT-${400 + (daySeed % 70)}`,
         airline: directRegularCarrier,
         aircraft: 'Airbus A220-300',
       }
@@ -624,16 +650,22 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
     corridor.durationMinutes + 15
   );
 
+  const depH4 = 14 + (daySeed % 3);
+  const depM4 = ((daySeed * 8) % 12) * 5;
+  const depTime4 = `${String(depH4).padStart(2, '0')}:${String(depM4).padStart(2, '0')}`;
+  const arrTotal4 = depH4 * 60 + depM4 + corridor.durationMinutes + 15;
+  const arrTime4 = `${String(Math.floor(arrTotal4 / 60) % 24).padStart(2, '0')}:${String(arrTotal4 % 60).padStart(2, '0')}`;
+
   flights.push({
-    id: `fl_optimal_${params.fromCode}_${params.toCode}`,
+    id: `fl_optimal_${params.fromCode}_${params.toCode}_${params.departureDate}`,
     flightType: 'regular',
     fromCode: params.fromCode,
     fromCity,
     toCode: params.toCode,
     toCity,
     departureDate: params.departureDate,
-    departureTime: '14:20',
-    arrivalTime: '18:45',
+    departureTime: depTime4,
+    arrivalTime: arrTime4,
     durationTotal: corridor.durationText,
     durationMinutes: corridor.durationMinutes + 15,
     stopsCount: 0,
@@ -646,10 +678,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalCity: toCity,
         departureTerminal: 'T2',
         arrivalTerminal: 'T1',
-        departureTime: '14:20',
-        arrivalTime: '18:45',
+        departureTime: depTime4,
+        arrivalTime: arrTime4,
         duration: corridor.durationText,
-        flightNumber: 'TK-1785',
+        flightNumber: `TK-${1700 + (daySeed % 90)}`,
         airline: premiumCarrier,
         aircraft: 'Airbus A321neo',
       }
@@ -697,6 +729,12 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         corridor.durationMinutes
       );
 
+      const depH5 = 17 + (daySeed % 2);
+      const depM5 = ((daySeed * 6) % 12) * 5;
+      const depTime5 = `${String(depH5).padStart(2, '0')}:${String(depM5).padStart(2, '0')}`;
+      const arrTotal5 = depH5 * 60 + depM5 + corridor.durationMinutes + 240;
+      const arrTime5 = `${String(Math.floor(arrTotal5 / 60) % 24).padStart(2, '0')}:${String(arrTotal5 % 60).padStart(2, '0')}`;
+
       const multiInfo: MultiHubInfo = {
         isAlternative: true,
         originCity: altCity,
@@ -709,15 +747,15 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       };
 
       flights.push({
-        id: `fl_multihub_${altCode}_${params.toCode}`,
+        id: `fl_multihub_${altCode}_${params.toCode}_${params.departureDate}`,
         flightType: 'regular',
         fromCode: altCode,
         fromCity: `${altCity} (умный хаб)`,
         toCode: params.toCode,
         toCity,
         departureDate: params.departureDate,
-        departureTime: '17:15',
-        arrivalTime: '20:45',
+        departureTime: depTime5,
+        arrivalTime: arrTime5,
         durationTotal: `${corridor.durationText} (+4ч автобус Lux Express)`,
         durationMinutes: corridor.durationMinutes + 240,
         stopsCount: 0,
@@ -730,10 +768,10 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
             arrivalCity: toCity,
             departureTerminal: 'T1',
             arrivalTerminal: 'T1',
-            departureTime: '17:15',
-            arrivalTime: '20:45',
+            departureTime: depTime5,
+            arrivalTime: arrTime5,
             duration: corridor.durationText,
-            flightNumber: 'FR-4018',
+            flightNumber: `FR-${4000 + (daySeed % 80)}`,
             airline: 'Ryanair',
             aircraft: 'Boeing 737 MAX 8',
           }

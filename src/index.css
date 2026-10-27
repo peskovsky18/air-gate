@@ -5,7 +5,36 @@
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg-page: #F2F2F7;
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F7F7F9;
+  --text-title: #000000;
+  --text-body: #1C1C1E;
+  --text-muted: #8E8E93;
+  --border-line: rgba(60, 60, 67, 0.12);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #000000;
+    --bg-card: #1C1C1E;
+    --bg-card-subtle: #2C2C2E;
+    --text-title: #FFFFFF;
+    --text-body: #F2F2F7;
+    --text-muted: #98989D;
+    --border-line: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.dark {
+  --bg-page: #000000;
+  --bg-card: #1C1C1E;
+  --bg-card-subtle: #2C2C2E;
+  --text-title: #FFFFFF;
+  --text-body: #F2F2F7;
+  --text-muted: #98989D;
+  --border-line: rgba(255, 255, 255, 0.12);
 }
 
 * {
@@ -13,49 +42,60 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
+  background-color: var(--bg-page) !important;
+  color: var(--text-title) !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
-  background-color: #F2F2F7;
-  color: #000000;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.dark body,
-body.dark {
-  background-color: #000000;
-  color: #FFFFFF;
-}
-
-/* Translucent functional materials */
+/* Translucent functional header & tab bars */
 .ios-chrome {
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(25px) saturate(190%);
   -webkit-backdrop-filter: blur(25px) saturate(190%);
-  color: #000000;
+  color: var(--text-title);
 }
 
+@media (prefers-color-scheme: dark) {
+  .ios-chrome {
+    background: rgba(28, 28, 30, 0.88);
+    color: #FFFFFF;
+  }
+}
 .dark .ios-chrome {
   background: rgba(28, 28, 30, 0.88);
-  backdrop-filter: blur(25px) saturate(190%);
-  -webkit-backdrop-filter: blur(25px) saturate(190%);
   color: #FFFFFF;
 }
 
-/* Grouped Inset Card with High Contrast */
+/* Grouped Inset Card */
 .ios-card {
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: var(--bg-card) !important;
+  color: var(--text-title) !important;
   border-radius: 16px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+@media (prefers-color-scheme: dark) {
+  .ios-card {
+    box-shadow: none;
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+}
 .dark .ios-card {
-  background-color: #1C1C1E;
-  color: #FFFFFF;
   box-shadow: none;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hairline dividers */
+.hairline-b {
+  border-bottom: 0.5px solid var(--border-line);
+}
+.hairline-t {
+  border-top: 0.5px solid var(--border-line);
 }
 
 /* Instant Response on Pointer-Down */
@@ -66,21 +106,6 @@ body.dark {
 .pressable:active {
   transform: scale(0.975);
   opacity: 0.85;
-}
-
-/* Clean Separator */
-.hairline-b {
-  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-.dark .hairline-b {
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.12);
-}
-
-.hairline-t {
-  border-top: 0.5px solid rgba(60, 60, 67, 0.12);
-}
-.dark .hairline-t {
-  border-top: 0.5px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Tabular numbers for price and time alignment */
