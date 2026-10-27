@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, Bell } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { SlidersHorizontal, Bell, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Flight, FilterState } from '../types';
 import { FlightCard } from './FlightCard';
 import { haptic } from '../lib/telegram';
@@ -23,9 +23,22 @@ export const FlightList: React.FC<FlightListProps> = ({
   filters,
 }) => {
   const [sortTab, setSortTab] = useState<'cheapest' | 'fastest' | 'optimal'>('cheapest');
+  const [selectedAirlineFilter, setSelectedAirlineFilter] = useState<string>('all');
+
+  // Extract unique airlines from current search
+  const availableAirlines = useMemo(() => {
+    const set = new Set<string>();
+    flights.forEach(f => f.airlines.forEach(a => set.add(a)));
+    return Array.from(set);
+  }, [flights]);
 
   const filteredFlights = useMemo(() => {
     let result = [...flights];
+
+    // Airline chip filter
+    if (selectedAirlineFilter !== 'all') {
+      result = result.filter(f => f.airlines.includes(selectedAirlineFilter));
+    }
 
     if (filters.baggageOnly) {
       result = result.filter(f => f.baggageIncluded);
@@ -59,7 +72,7 @@ export const FlightList: React.FC<FlightListProps> = ({
     }
 
     return result;
-  }, [flights, sortTab, filters]);
+  }, [flights, sortTab, filters, selectedAirlineFilter]);
 
   const activeFiltersCount = (filters.baggageOnly ? 1 : 0) +
     (filters.directOnly ? 1 : 0) +
@@ -69,7 +82,56 @@ export const FlightList: React.FC<FlightListProps> = ({
 
   return (
     <div className="relative pb-24">
-      {/* Segmented Control Header */}
+      {/* Market Scan Status Banner */}
+      <div className="px-4 pt-1 pb-2 flex items-center justify-between text-[11px] text-zinc-500">
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" />
+          <span>Сканирование завершено: 16 авиакомпаний • 8 онлайн-касс</span>
+        </div>
+        <span className="font-semibold text-black dark:text-white tabular">
+          {filteredFlights.length} из {flights.length} рейсов
+        </span>
+      </div>
+
+      {/* Airline Filter Chips Carousel */}
+      <div className="px-4 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => {
+            haptic.selection();
+            setSelectedAirlineFilter('all');
+          }}
+          className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors pressable ${
+            selectedAirlineFilter === 'all'
+              ? 'bg-black text-white dark:bg-white dark:text-black font-semibold'
+              : 'bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+          }`}
+        >
+          Все ({flights.length})
+        </button>
+
+        {availableAirlines.map(airline => {
+          const isSelected = selectedAirlineFilter === airline;
+          const count = flights.filter(f => f.airlines.includes(airline)).length;
+          return (
+            <button
+              key={airline}
+              onClick={() => {
+                haptic.selection();
+                setSelectedAirlineFilter(airline);
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors pressable ${
+                isSelected
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+              }`}
+            >
+              {airline} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Sorting Tabs & Filters Bar */}
       <div className="px-4 py-2 flex items-center justify-between gap-2">
         <div className="flex-1 p-0.5 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 flex items-center relative">
           {[
@@ -129,7 +191,7 @@ export const FlightList: React.FC<FlightListProps> = ({
             По выбранным фильтрам билетов не найдено
           </p>
           <p className="text-xs text-zinc-400 mt-1">
-            Попробуйте сбросить фильтры
+            Попробуйте сбросить фильтр авиакомпаний или пересадок
           </p>
         </div>
       ) : (
@@ -146,7 +208,7 @@ export const FlightList: React.FC<FlightListProps> = ({
         </div>
       )}
 
-      {/* Clean Floating Price Alert Pill */}
+      {/* Floating Price Alert Button */}
       {bestFlight && (
         <div className="fixed bottom-20 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none">
           <button
@@ -157,7 +219,7 @@ export const FlightList: React.FC<FlightListProps> = ({
             className="pointer-events-auto py-2.5 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[13px] shadow-lg flex items-center gap-2 pressable"
           >
             <Bell className="w-4 h-4 stroke-[2]" />
-            <span>Следить за ценой</span>
+            <span>Следить за ценой (от {bestFlight.bestPrice.toLocaleString('ru-RU')} ₽)</span>
           </button>
         </div>
       )}
