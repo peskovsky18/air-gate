@@ -56,7 +56,7 @@ export const App: React.FC = () => {
     timeOfDay: 'all',
   });
 
-  const handleSearch = async (overrideParams?: SearchParams) => {
+  const handleSearch = async (overrideParams?: SearchParams, shouldScroll: boolean = false) => {
     const paramsToRun = overrideParams || searchParams;
     setIsLoading(true);
     setHasSearched(true);
@@ -67,6 +67,14 @@ export const App: React.FC = () => {
       console.error('Search error:', e);
     } finally {
       setIsLoading(false);
+      if (shouldScroll) {
+        setTimeout(() => {
+          const el = document.getElementById('flight-results-anchor');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 120);
+      }
     }
   };
 
@@ -134,7 +142,7 @@ export const App: React.FC = () => {
             <SearchForm
               searchParams={searchParams}
               onChangeParams={setSearchParams}
-              onSearch={(params) => handleSearch(params || searchParams)}
+              onSearch={(params) => handleSearch(params || searchParams, true)}
               onOpenAirportModal={(mode) => {
                 setAirportModalMode(mode);
                 setIsAirportModalOpen(true);
@@ -144,16 +152,28 @@ export const App: React.FC = () => {
               isLoading={isLoading}
             />
 
-            {hasSearched && (
-              <FlightList
-                flights={flights}
-                favorites={favorites}
-                onToggleFavorite={handleToggleFavorite}
-                onOpenFilter={() => setIsFilterModalOpen(true)}
-                onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
-                filters={filters}
-              />
-            )}
+            <div id="flight-results-anchor" className="scroll-mt-4">
+              {isLoading ? (
+                <div className="mx-4 my-6 p-8 ios-card text-center border border-black/[0.08] dark:border-white/[0.12]">
+                  <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-[16px] font-bold text-black dark:text-white">
+                    Ищем билеты...
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    Сравниваем авиакомпании, чартеры и продавцов
+                  </p>
+                </div>
+              ) : hasSearched ? (
+                <FlightList
+                  flights={flights}
+                  favorites={favorites}
+                  onToggleFavorite={handleToggleFavorite}
+                  onOpenFilter={() => setIsFilterModalOpen(true)}
+                  onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+                  filters={filters}
+                />
+              ) : null}
+            </div>
           </div>
         )}
 
@@ -176,7 +196,7 @@ export const App: React.FC = () => {
               };
               setSearchParams(updated);
               setActiveTab('search');
-              handleSearch(updated);
+              handleSearch(updated, true);
             }}
           />
         )}
@@ -260,7 +280,7 @@ export const App: React.FC = () => {
             ? { ...searchParams, fromCode: airport.code, fromCity: airport.city }
             : { ...searchParams, toCode: airport.code, toCity: airport.city };
           setSearchParams(updated);
-          handleSearch(updated);
+          handleSearch(updated, true);
         }}
       />
 
@@ -274,7 +294,7 @@ export const App: React.FC = () => {
             departureDate: date,
           };
           setSearchParams(updated);
-          handleSearch(updated);
+          handleSearch(updated, true);
         }}
         basePrice={flights[0]?.bestPrice || 14500}
       />

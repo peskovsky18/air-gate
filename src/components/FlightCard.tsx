@@ -102,28 +102,43 @@ export const FlightCard: React.FC<FlightCardProps> = ({
           </div>
         )}
 
-        {/* Top Bar: Airlines & Quick Actions */}
-        <div className="px-4 pt-3 pb-2 flex items-center justify-between hairline-b">
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-extrabold text-black dark:text-white tracking-tight">
-              {flight.airlines.join(', ')}
-            </span>
-            {flight.isCheapest && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                Лучшая цена
+        {/* Top Bar: Route, Date, Airlines & Quick Actions */}
+        <div className="px-4 pt-3.5 pb-2.5 flex items-start justify-between hairline-b">
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[17px] font-black text-black dark:text-white tracking-tight">
+                {flight.fromCity}
               </span>
-            )}
-            {flight.isFastest && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
-                Быстрый
+              <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400 stroke-[2.5] flex-shrink-0" />
+              <span className="text-[17px] font-black text-blue-600 dark:text-blue-400 tracking-tight">
+                {flight.toCity}
               </span>
-            )}
+              <span className="text-xs font-mono font-medium text-zinc-400 dark:text-zinc-500">
+                ({flight.fromCode}–{flight.toCode})
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 mt-1 text-xs text-zinc-600 dark:text-zinc-300 flex-wrap">
+              <span className="font-bold text-black dark:text-white">{flight.airlines.join(', ')}</span>
+              <span>•</span>
+              <span className="font-medium capitalize">{formattedFlightDate}</span>
+              {flight.isCheapest && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                  Лучшая цена
+                </span>
+              )}
+              {flight.isFastest && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
+                  Быстрый
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5">
             <button
               onClick={handleShareClick}
-              className="p-1.5 rounded-full text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/80 pressable"
+              className="p-2 rounded-full text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/80 pressable"
               aria-label="Поделиться с близкими"
               title="Отправить в чат"
             >
@@ -131,7 +146,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             </button>
             <button
               onClick={handleFavoriteClick}
-              className={`p-1.5 rounded-full pressable ${
+              className={`p-2 rounded-full pressable ${
                 isFavorite ? 'text-red-500' : 'text-zinc-400 hover:text-black dark:hover:text-white'
               }`}
               aria-label="Избранное"
@@ -139,17 +154,6 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
           </div>
-        </div>
-
-        {/* Prominent Date Bar (Directly confirms selected date) */}
-        <div className="px-4 pt-2.5 pb-1 flex items-center justify-between text-xs hairline-b bg-zinc-50 dark:bg-zinc-800/40">
-          <div className="flex items-center gap-1.5 font-bold text-black dark:text-white capitalize text-[13px]">
-            <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{formattedFlightDate}</span>
-          </div>
-          <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-            {flight.segments[0]?.flightNumber} • {flight.segments[0]?.aircraft}
-          </span>
         </div>
 
         {/* Flight Schedule */}
@@ -162,7 +166,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               <div className="text-[13px] font-bold text-black dark:text-white mt-1">
                 {flight.fromCode}
               </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate max-w-[100px]">
+              <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
                 {flight.fromCity}
               </div>
             </div>
@@ -198,7 +202,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               <div className="text-[13px] font-bold text-black dark:text-white mt-1">
                 {flight.toCode}
               </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate max-w-[100px]">
+              <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
                 {flight.toCity}
               </div>
             </div>
