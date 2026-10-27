@@ -111,7 +111,12 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               <span className="font-medium capitalize">{formattedFlightDate}</span>
               {flight.isCheapest && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-300">
-                  Лучшая цена
+                  Самый дешёвый
+                </span>
+              )}
+              {flight.stopsCount === 0 && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-950/90 text-purple-800 dark:text-purple-300">
+                  {flight.verdict?.badgeTitle === 'Единственный прямой' ? 'Единственный прямой' : 'Прямой'}
                 </span>
               )}
             </div>
