@@ -4,7 +4,7 @@ export interface Airport {
   country: string;
   name: string;
   popular?: boolean;
-  cluster?: string; // e.g. "Балтия (RIX, TLL, VNO)", "Москва (SVO, VKO, DME)"
+  cluster?: string;
   nearbyCodes?: string[];
 }
 
@@ -13,9 +13,11 @@ export interface FlightSegment {
   arrivalAirport: string;
   departureCity: string;
   arrivalCity: string;
-  departureTime: string; // e.g. "10:30"
-  arrivalTime: string;   // e.g. "14:15"
-  duration: string;      // e.g. "3ч 45м"
+  departureTerminal?: string;
+  arrivalTerminal?: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
   flightNumber: string;
   airline: string;
   airlineLogo?: string;
@@ -26,8 +28,32 @@ export interface LayoverInfo {
   airportCode: string;
   city: string;
   duration: string;
-  isShort?: boolean;   // < 60 min warning
-  isNight?: boolean;   // night layover warning
+  isShort?: boolean;
+  isNight?: boolean;
+  terminalChange?: string;         // e.g. "Смена терминала: 1 → 2"
+  selfTransfer?: boolean;          // true if separate tickets
+  transitVisaRequired?: boolean;   // true if transit visa needed
+  transitVisaNote?: string;        // e.g. "Транзитная зона открыта 24ч, виза не нужна"
+  baggageRecheck?: boolean;        // true if luggage must be picked up and checked again
+}
+
+export interface MultiHubInfo {
+  isAlternative: boolean;
+  originCity: string;
+  originCode: string;
+  groundTransport: string;         // e.g. "Автобус Lux Express из Риги (4ч 15м)"
+  groundPrice: number;             // e.g. 1200
+  flightPrice: number;             // e.g. 9800
+  netSavings: number;              // e.g. 4200
+  badgeText: string;               // "Экономия 4 200 ₽ с учетом автобуса"
+}
+
+export interface PriceVerdict {
+  action: 'buy_now' | 'wait' | 'fair_price';
+  badgeTitle: string;              // "Брать сейчас" | "Подождать" | "Справедливая цена"
+  explanation: string;             // "Цена на историческом минимуме за последние 3 месяца"
+  confidencePercent: number;       // e.g. 92
+  expectedChange?: string;         // "+18% в течение 48 часов"
 }
 
 export interface SellerOffer {
@@ -38,7 +64,7 @@ export interface SellerOffer {
   baggageIncluded: boolean;
   carryOnIncluded: boolean;
   bookingUrl: string;
-  rating: number; // e.g. 4.9
+  rating: number;
 }
 
 export interface Flight {
@@ -58,12 +84,18 @@ export interface Flight {
   airlines: string[];
   bestPrice: number;
   averageMarketPrice: number;
-  priceDiscountPercent: number; // e.g. 18 means 18% cheaper than market avg
-  priceTrend: 'dropping' | 'stable' | 'rising';
-  priceConfidenceText: string;  // e.g. "Цена на 18% ниже средней, бронируйте сейчас"
+  priceDiscountPercent: number;
   baggageIncluded: boolean;
   carryOnIncluded: boolean;
   sellers: SellerOffer[];
+
+  // Differentiation & Transparency Features
+  verdict: PriceVerdict;
+  multiHubAlternative?: MultiHubInfo;
+  selfTransfer: boolean;
+  baggageRecheck: boolean;
+  terminalChangeWarning?: string;
+  transitVisaNote: string;
   isCheapest?: boolean;
   isFastest?: boolean;
   isOptimal?: boolean;
@@ -105,15 +137,15 @@ export interface Subscription {
 export interface FilterState {
   baggageOnly: boolean;
   directOnly: boolean;
-  maxStops: number | null; // null = all, 0 = direct, 1 = max 1 stop
+  maxStops: number | null;
   maxPrice: number;
   selectedAirlines: string[];
   timeOfDay: 'all' | 'morning' | 'day' | 'evening';
 }
 
 export interface DatePriceHeatmap {
-  date: string; // YYYY-MM-DD
-  dayOfWeek: string; // 'Пн', 'Вт', etc.
+  date: string;
+  dayOfWeek: string;
   dayOfMonth: number;
   price: number;
   isLowest?: boolean;

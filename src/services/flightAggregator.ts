@@ -1,35 +1,22 @@
-import { Flight, SearchParams, SellerOffer, DatePriceHeatmap, LayoverInfo, FlightSegment } from '../types';
-import { getAirportByCode, getNearbyAirports, POPULAR_DESTINATIONS } from '../data/airports';
+import { Flight, SearchParams, SellerOffer, DatePriceHeatmap, LayoverInfo, FlightSegment, MultiHubInfo, PriceVerdict } from '../types';
+import { getAirportByCode, getNearbyAirports } from '../data/airports';
 
-// Realistic airline and seller mock generators
 const AIRLINES = [
-  { name: 'Turkish Airlines', code: 'TK', logo: '🇹🇷' },
-  { name: 'Emirates', code: 'EK', logo: '🇦🇪' },
-  { name: 'Air Baltic', code: 'BT', logo: '🇱🇻' },
-  { name: 'Flydubai', code: 'FZ', logo: '🇦🇪' },
-  { name: 'Pegasus Airlines', code: 'PC', logo: '🇹🇷' },
-  { name: 'Ryanair', code: 'FR', logo: '🇮🇪' },
-  { name: 'Wizz Air', code: 'W6', logo: '🇭🇺' },
-  { name: 'Armenia Airways', code: '6A', logo: '🇦🇲' },
-  { name: 'Georgian Airways', code: 'A9', logo: '🇬🇪' },
-  { name: 'Qatar Airways', code: 'QR', logo: '🇶🇦' },
-  { name: 'Lufthansa', code: 'LH', logo: '🇩🇪' },
-  { name: 'Uzbekistan Airways', code: 'HY', logo: '🇺🇿' },
-];
-
-const SELLERS = [
-  'Официальный сайт авиакомпании',
-  'City.Travel',
-  'КупиБилет',
-  'OneTwoTrip',
-  'SuperKassa',
-  'Билетик.Аэро',
-  'МегаТрэвел'
+  { name: 'Turkish Airlines', code: 'TK' },
+  { name: 'Emirates', code: 'EK' },
+  { name: 'Air Baltic', code: 'BT' },
+  { name: 'Flydubai', code: 'FZ' },
+  { name: 'Pegasus Airlines', code: 'PC' },
+  { name: 'Ryanair', code: 'FR' },
+  { name: 'Wizz Air', code: 'W6' },
+  { name: 'Armenia Airways', code: '6A' },
+  { name: 'Georgian Airways', code: 'A9' },
+  { name: 'Qatar Airways', code: 'QR' },
+  { name: 'Lufthansa', code: 'LH' },
 ];
 
 export const searchFlights = async (params: SearchParams): Promise<Flight[]> => {
-  // Simulate network & multi-market scan latency
-  await new Promise(res => setTimeout(res, 600));
+  await new Promise(res => setTimeout(res, 400));
 
   const fromAirport = getAirportByCode(params.fromCode);
   const toAirport = getAirportByCode(params.toCode);
@@ -37,51 +24,16 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
   const fromCity = fromAirport?.city || params.fromCity || 'Город отправления';
   const toCity = toAirport?.city || params.toCity || 'Город прибытия';
 
-  // Base pricing logic influenced by destination distance
   let basePrice = 14500;
   if (['DXB', 'BKK', 'HKT'].includes(params.toCode)) basePrice = 32000;
   if (['EVN', 'TBS', 'IST'].includes(params.toCode)) basePrice = 12900;
-  if (['RIX', 'TLL', 'VNO'].includes(params.toCode)) basePrice = 15800;
+  if (['RIX', 'TLL', 'VNO'].includes(params.toCode)) basePrice = 9800;
 
-  // Generate 6 to 9 unique flight options from different airlines and routes
   const flights: Flight[] = [];
 
-  // 1. Direct or fastest flight option
-  const directAirline = AIRLINES[Math.floor(Math.random() * AIRLINES.length)];
-  const directPrice = Math.round(basePrice * 1.15 / 100) * 100;
-
-  const directSellers: SellerOffer[] = [
-    {
-      id: 'sel_1',
-      sellerName: `Официальный сайт ${directAirline.name}`,
-      isAirlineDirect: true,
-      price: directPrice + 450,
-      baggageIncluded: true,
-      carryOnIncluded: true,
-      bookingUrl: 'https://airline.com/booking',
-      rating: 4.9
-    },
-    {
-      id: 'sel_2',
-      sellerName: 'City.Travel',
-      isAirlineDirect: false,
-      price: directPrice,
-      baggageIncluded: false,
-      carryOnIncluded: true,
-      bookingUrl: 'https://partner.com/deal1',
-      rating: 4.8
-    },
-    {
-      id: 'sel_3',
-      sellerName: 'КупиБилет',
-      isAirlineDirect: false,
-      price: directPrice + 200,
-      baggageIncluded: true,
-      carryOnIncluded: true,
-      bookingUrl: 'https://partner.com/deal2',
-      rating: 4.7
-    }
-  ];
+  // 1. Direct Flight with "Брать сейчас" verdict
+  const directAirline = AIRLINES[2]; // Air Baltic or Turkish
+  const directPrice = Math.round(basePrice * 1.05 / 100) * 100;
 
   flights.push({
     id: 'fl_direct_fastest',
@@ -102,334 +54,329 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
         arrivalAirport: params.toCode,
         departureCity: fromCity,
         arrivalCity: toCity,
+        departureTerminal: 'T1',
+        arrivalTerminal: 'T2',
         departureTime: '10:15',
         arrivalTime: '14:35',
         duration: '4ч 20м',
         flightNumber: `${directAirline.code}-412`,
         airline: directAirline.name,
-        airlineLogo: directAirline.logo,
-        aircraft: 'Airbus A321neo'
+        aircraft: 'Airbus A220-300'
       }
     ],
     airlines: [directAirline.name],
     bestPrice: directPrice,
     averageMarketPrice: Math.round(directPrice * 1.25),
     priceDiscountPercent: 12,
-    priceTrend: 'rising',
-    priceConfidenceText: 'Высокий спрос на прямой рейс. Вероятность роста цены 86% в течение 24ч.',
     baggageIncluded: false,
     carryOnIncluded: true,
-    sellers: directSellers,
+    selfTransfer: false,
+    baggageRecheck: false,
+    transitVisaNote: 'Прямой рейс. Никаких транзитных виз и пересадок.',
+    verdict: {
+      action: 'buy_now',
+      badgeTitle: 'Брать сейчас',
+      explanation: 'Цена на минимуме за последние 45 дней. Прямых рейсов мало, вероятность роста +18% в течение 24 часов.',
+      confidencePercent: 91,
+      expectedChange: '+2 400 ₽ завтра',
+    },
+    sellers: [
+      {
+        id: 'sel_1',
+        sellerName: `Официальный сайт ${directAirline.name}`,
+        isAirlineDirect: true,
+        price: directPrice + 450,
+        baggageIncluded: true,
+        carryOnIncluded: true,
+        bookingUrl: 'https://airline.com',
+        rating: 4.9
+      },
+      {
+        id: 'sel_2',
+        sellerName: 'City.Travel',
+        isAirlineDirect: false,
+        price: directPrice,
+        baggageIncluded: false,
+        carryOnIncluded: true,
+        bookingUrl: 'https://partner.com/deal1',
+        rating: 4.8
+      }
+    ],
     isFastest: true,
   });
 
-  // 2. Super cheap option (low-cost carrier with 1 layover)
-  const lowCostAirline = AIRLINES[2]; // Air Baltic / Pegasus
-  const cheapPrice = Math.round(basePrice * 0.78 / 100) * 100;
-  const cheapLayover: LayoverInfo = {
-    airportCode: 'IST',
-    city: 'Стамбул',
-    duration: '2ч 40м',
-    isShort: false,
-    isNight: false,
-  };
+  // 2. Smart Multi-Hub Alternative Flight (KILLER FEATURE: Ground + Flight savings!)
+  const isBalticSearch = ['RIX', 'TLL', 'VNO'].includes(params.fromCode);
+  const altCity = params.fromCode === 'RIX' ? 'Таллин' : 'Рига';
+  const altCode = params.fromCode === 'RIX' ? 'TLL' : 'RIX';
+  const groundTransportDesc = params.fromCode === 'RIX' ? 'Автобус Lux Express из Риги (4ч 15м)' : 'Автобус Ecolines из Таллина (4ч 30м)';
+  const groundPrice = 1200;
+  const multiFlightPrice = Math.round(basePrice * 0.62 / 100) * 100;
+  const netSavings = directPrice - (multiFlightPrice + groundPrice);
 
-  const cheapSellers: SellerOffer[] = [
-    {
-      id: 'sel_ch_1',
-      sellerName: 'SuperKassa',
-      isAirlineDirect: false,
-      price: cheapPrice,
-      baggageIncluded: false,
-      carryOnIncluded: true,
-      bookingUrl: 'https://partner.com/superkassa',
-      rating: 4.8
-    },
-    {
-      id: 'sel_ch_2',
-      sellerName: `Официальный сайт ${lowCostAirline.name}`,
-      isAirlineDirect: true,
-      price: cheapPrice + 800,
-      baggageIncluded: true,
-      carryOnIncluded: true,
-      bookingUrl: 'https://airline.com/booking',
-      rating: 4.9
-    }
-  ];
-
-  flights.push({
-    id: 'fl_cheapest',
-    fromCode: params.fromCode,
-    fromCity,
-    toCode: params.toCode,
-    toCity,
-    departureDate: params.departureDate,
-    departureTime: '06:40',
-    arrivalTime: '15:20',
-    durationTotal: '8ч 40м',
-    durationMinutes: 520,
-    stopsCount: 1,
-    layovers: [cheapLayover],
-    segments: [
-      {
-        departureAirport: params.fromCode,
-        arrivalAirport: 'IST',
-        departureCity: fromCity,
-        arrivalCity: 'Стамбул',
-        departureTime: '06:40',
-        arrivalTime: '10:00',
-        duration: '3ч 20м',
-        flightNumber: `${lowCostAirline.code}-819`,
-        airline: lowCostAirline.name,
-        airlineLogo: lowCostAirline.logo,
-        aircraft: 'Boeing 737-800'
-      },
-      {
-        departureAirport: 'IST',
-        arrivalAirport: params.toCode,
-        departureCity: 'Стамбул',
-        arrivalCity: toCity,
-        departureTime: '12:40',
-        arrivalTime: '15:20',
-        duration: '2ч 40м',
-        flightNumber: `${lowCostAirline.code}-992`,
-        airline: lowCostAirline.name,
-        airlineLogo: lowCostAirline.logo,
-        aircraft: 'Boeing 737-800'
-      }
-    ],
-    airlines: [lowCostAirline.name],
-    bestPrice: cheapPrice,
-    averageMarketPrice: Math.round(cheapPrice * 1.35),
-    priceDiscountPercent: 26,
-    priceTrend: 'dropping',
-    priceConfidenceText: 'Суперцена! На 26% дешевле среднего предложения по рынку.',
-    baggageIncluded: false,
-    carryOnIncluded: true,
-    sellers: cheapSellers,
-    isCheapest: true,
-  });
-
-  // 3. Optimal Flight (best balance of short layover + full baggage + great price)
-  const optAirline = AIRLINES[0]; // Turkish or Emirates
-  const optPrice = Math.round(basePrice * 0.94 / 100) * 100;
-  const optLayover: LayoverInfo = {
-    airportCode: 'EVN',
-    city: 'Ереван',
-    duration: '1ч 45м',
-    isShort: false,
-    isNight: false,
-  };
-
-  const optSellers: SellerOffer[] = [
-    {
-      id: 'sel_opt_1',
-      sellerName: 'Билетик.Аэро',
-      isAirlineDirect: false,
-      price: optPrice,
-      baggageIncluded: true,
-      carryOnIncluded: true,
-      bookingUrl: 'https://partner.com/biletik',
-      rating: 4.9
-    },
-    {
-      id: 'sel_opt_2',
-      sellerName: `Официальный сайт ${optAirline.name}`,
-      isAirlineDirect: true,
-      price: optPrice + 350,
-      baggageIncluded: true,
-      carryOnIncluded: true,
-      bookingUrl: 'https://airline.com/booking',
-      rating: 4.95
-    }
-  ];
-
-  flights.push({
-    id: 'fl_optimal',
-    fromCode: params.fromCode,
-    fromCity,
-    toCode: params.toCode,
-    toCity,
-    departureDate: params.departureDate,
-    departureTime: '12:20',
-    arrivalTime: '19:35',
-    durationTotal: '7ч 15м',
-    durationMinutes: 435,
-    stopsCount: 1,
-    layovers: [optLayover],
-    segments: [
-      {
-        departureAirport: params.fromCode,
-        arrivalAirport: 'EVN',
-        departureCity: fromCity,
-        arrivalCity: 'Ереван',
-        departureTime: '12:20',
-        arrivalTime: '15:30',
-        duration: '3ч 10м',
-        flightNumber: `${optAirline.code}-221`,
-        airline: optAirline.name,
-        airlineLogo: optAirline.logo,
-        aircraft: 'Airbus A320'
-      },
-      {
-        departureAirport: 'EVN',
-        arrivalAirport: params.toCode,
-        departureCity: 'Ереван',
-        arrivalCity: toCity,
-        departureTime: '17:15',
-        arrivalTime: '19:35',
-        duration: '2ч 20м',
-        flightNumber: `${optAirline.code}-778`,
-        airline: optAirline.name,
-        airlineLogo: optAirline.logo,
-        aircraft: 'Airbus A320'
-      }
-    ],
-    airlines: [optAirline.name],
-    bestPrice: optPrice,
-    averageMarketPrice: Math.round(optPrice * 1.2),
-    priceDiscountPercent: 18,
-    priceTrend: 'stable',
-    priceConfidenceText: 'Оптимальный тариф: включает багаж 23 кг и удобную дневную пересадку 1ч 45м.',
-    baggageIncluded: true,
-    carryOnIncluded: true,
-    sellers: optSellers,
-    isOptimal: true,
-  });
-
-  // 4. Flight with nearby airport alternative (e.g. Riga / Tallinn or alternative hub)
-  const nearbyHubs = getNearbyAirports(params.fromCode);
-  if (nearbyHubs.length > 0 || params.includeNearbyAirports) {
-    const nearby = nearbyHubs[0] || { code: 'TLL', city: 'Таллин', name: 'Таллин' };
-    const altPrice = Math.round(cheapPrice * 0.88 / 100) * 100;
-    const altAirline = AIRLINES[2]; // Air Baltic
+  if (isBalticSearch && netSavings > 1500) {
+    const multiHubInfo: MultiHubInfo = {
+      isAlternative: true,
+      originCity: altCity,
+      originCode: altCode,
+      groundTransport: groundTransportDesc,
+      groundPrice,
+      flightPrice: multiFlightPrice,
+      netSavings,
+      badgeText: `Экономия ${netSavings.toLocaleString('ru-RU')} ₽ с учетом автобуса`,
+    };
 
     flights.push({
-      id: `fl_nearby_${nearby.code}`,
-      fromCode: nearby.code,
-      fromCity: `${nearby.city} (соседний хаб)`,
+      id: 'fl_multihub_smart',
+      fromCode: altCode,
+      fromCity: `${altCity} (умный хаб)`,
       toCode: params.toCode,
       toCity,
       departureDate: params.departureDate,
-      departureTime: '14:00',
-      arrivalTime: '18:15',
-      durationTotal: '4ч 15м',
-      durationMinutes: 255,
+      departureTime: '15:20',
+      arrivalTime: '19:40',
+      durationTotal: '4ч 20м рейс (+4ч автобус)',
+      durationMinutes: 260,
       stopsCount: 0,
       layovers: [],
       segments: [
         {
-          departureAirport: nearby.code,
+          departureAirport: altCode,
           arrivalAirport: params.toCode,
-          departureCity: nearby.city,
+          departureCity: altCity,
           arrivalCity: toCity,
-          departureTime: '14:00',
-          arrivalTime: '18:15',
-          duration: '4ч 15м',
-          flightNumber: `${altAirline.code}-504`,
-          airline: altAirline.name,
-          airlineLogo: altAirline.logo,
-          aircraft: 'Airbus A220-300'
+          departureTerminal: 'T1',
+          arrivalTerminal: 'T1',
+          departureTime: '15:20',
+          arrivalTime: '19:40',
+          duration: '4ч 20м',
+          flightNumber: 'FR-2841',
+          airline: 'Ryanair',
+          aircraft: 'Boeing 737 MAX 8'
         }
       ],
-      airlines: [altAirline.name],
-      bestPrice: altPrice,
-      averageMarketPrice: Math.round(altPrice * 1.3),
-      priceDiscountPercent: 24,
-      priceTrend: 'dropping',
-      priceConfidenceText: `Вылет из ${nearby.city} экономит вам ${cheapPrice - altPrice} ₽! Прямой рейс.`,
-      baggageIncluded: true,
+      airlines: ['Ryanair'],
+      bestPrice: multiFlightPrice,
+      averageMarketPrice: directPrice,
+      priceDiscountPercent: Math.round((netSavings / directPrice) * 100),
+      baggageIncluded: false,
       carryOnIncluded: true,
+      selfTransfer: false,
+      baggageRecheck: false,
+      transitVisaNote: 'Вылет из соседней столицы. Шенгенская зона без границ.',
+      multiHubAlternative: multiHubInfo,
+      verdict: {
+        action: 'buy_now',
+        badgeTitle: 'Умная выгода',
+        explanation: `Билет из ${altCity} стоит всего ${multiFlightPrice.toLocaleString('ru-RU')} ₽. Даже с билетом на комфортный автобус ${groundTransportDesc} (${groundPrice} ₽) вы экономите чистыми ${netSavings.toLocaleString('ru-RU')} ₽!`,
+        confidencePercent: 96,
+      },
       sellers: [
         {
-          id: 'sel_alt_1',
-          sellerName: `Официальный сайт ${altAirline.name}`,
+          id: 'sel_multi_1',
+          sellerName: 'Официальный сайт Ryanair',
           isAirlineDirect: true,
-          price: altPrice,
-          baggageIncluded: true,
+          price: multiFlightPrice,
+          baggageIncluded: false,
           carryOnIncluded: true,
-          bookingUrl: 'https://airline.com',
-          rating: 4.9
+          bookingUrl: 'https://ryanair.com',
+          rating: 4.8
         }
-      ]
+      ],
+      isCheapest: true,
     });
   }
 
-  // 5. Short layover warning flight (e.g. 45 min connection)
-  const shortLayoverFlightPrice = Math.round(basePrice * 0.82 / 100) * 100;
+  // 3. Layover Flight with Terminal Change & Night Warning
+  const layoverPrice = Math.round(basePrice * 0.74 / 100) * 100;
+  const layoverAirline = AIRLINES[4]; // Pegasus
+  const layoverInfo: LayoverInfo = {
+    airportCode: 'SAW',
+    city: 'Стамбул',
+    duration: '1ч 15м',
+    isShort: true,
+    isNight: false,
+    terminalChange: 'Смена терминала 1 → 2',
+    selfTransfer: true,
+    transitVisaRequired: false,
+    transitVisaNote: 'Транзитная зона открыта, виза не требуется. Но требуется повторная сдача багажа!',
+    baggageRecheck: true,
+  };
+
   flights.push({
-    id: 'fl_warning_short',
+    id: 'fl_layover_warning',
     fromCode: params.fromCode,
     fromCity,
     toCode: params.toCode,
     toCity,
     departureDate: params.departureDate,
-    departureTime: '18:30',
-    arrivalTime: '02:10',
-    durationTotal: '7ч 40м',
-    durationMinutes: 460,
+    departureTime: '06:10',
+    arrivalTime: '14:50',
+    durationTotal: '8ч 40м',
+    durationMinutes: 520,
     stopsCount: 1,
-    layovers: [
-      {
-        airportCode: 'SAW',
-        city: 'Стамбул Сабиха',
-        duration: '45м',
-        isShort: true,
-        isNight: false,
-      }
-    ],
+    layovers: [layoverInfo],
     segments: [
       {
         departureAirport: params.fromCode,
         arrivalAirport: 'SAW',
         departureCity: fromCity,
         arrivalCity: 'Стамбул',
-        departureTime: '18:30',
-        arrivalTime: '22:15',
-        duration: '3ч 45м',
-        flightNumber: 'PC-1102',
+        departureTerminal: 'T1',
+        arrivalTerminal: 'T1',
+        departureTime: '06:10',
+        arrivalTime: '10:45',
+        duration: '4ч 35м',
+        flightNumber: 'PC-1204',
         airline: 'Pegasus Airlines',
-        airlineLogo: '🇹🇷',
+        aircraft: 'Airbus A320neo'
       },
       {
         departureAirport: 'SAW',
         arrivalAirport: params.toCode,
         departureCity: 'Стамбул',
         arrivalCity: toCity,
-        departureTime: '23:00',
-        arrivalTime: '02:10',
-        duration: '3ч 10м',
-        flightNumber: 'PC-402',
+        departureTerminal: 'T2',
+        arrivalTerminal: 'T1',
+        departureTime: '12:00',
+        arrivalTime: '14:50',
+        duration: '2ч 50м',
+        flightNumber: 'PC-891',
         airline: 'Pegasus Airlines',
-        airlineLogo: '🇹🇷',
+        aircraft: 'Boeing 737-800'
       }
     ],
     airlines: ['Pegasus Airlines'],
-    bestPrice: shortLayoverFlightPrice,
-    averageMarketPrice: Math.round(shortLayoverFlightPrice * 1.2),
-    priceDiscountPercent: 15,
-    priceTrend: 'stable',
-    priceConfidenceText: 'Внимание: очень короткая пересадка 45 мин в Стамбуле (SAW).',
+    bestPrice: layoverPrice,
+    averageMarketPrice: Math.round(layoverPrice * 1.3),
+    priceDiscountPercent: 24,
     baggageIncluded: false,
     carryOnIncluded: true,
+    selfTransfer: true,
+    baggageRecheck: true,
+    terminalChangeWarning: 'Смена терминала T1 → T2 (пешком 15 мин)',
+    transitVisaNote: 'Виза не нужна, но при повторной сдаче багажа нужно пройти паспортный контроль.',
+    verdict: {
+      action: 'wait',
+      badgeTitle: 'Подождать',
+      explanation: 'Низкая цена, но сложная пересадка: раздельное бронирование (self-transfer), нужно забрать и снова сдать багаж в Стамбуле за 1ч 15м. Высокий риск опоздания.',
+      confidencePercent: 78,
+    },
     sellers: [
       {
-        id: 'sel_pc_1',
-        sellerName: 'Pegasus Direct',
-        isAirlineDirect: true,
-        price: shortLayoverFlightPrice,
+        id: 'sel_pg_1',
+        sellerName: 'SuperKassa',
+        isAirlineDirect: false,
+        price: layoverPrice,
         baggageIncluded: false,
         carryOnIncluded: true,
-        bookingUrl: 'https://flypgs.com',
-        rating: 4.6
+        bookingUrl: 'https://superkassa.ru',
+        rating: 4.7
       }
-    ]
+    ],
+  });
+
+  // 4. Optimal Comfort Flight (Seamless luggage, no visa, fair price)
+  const optPrice = Math.round(basePrice * 0.88 / 100) * 100;
+  const optAirline = AIRLINES[0]; // Turkish Airlines
+  flights.push({
+    id: 'fl_optimal_comfort',
+    fromCode: params.fromCode,
+    fromCity,
+    toCode: params.toCode,
+    toCity,
+    departureDate: params.departureDate,
+    departureTime: '13:00',
+    arrivalTime: '20:15',
+    durationTotal: '7ч 15м',
+    durationMinutes: 435,
+    stopsCount: 1,
+    layovers: [
+      {
+        airportCode: 'IST',
+        city: 'Стамбул Новый',
+        duration: '2ч 10м',
+        isShort: false,
+        isNight: false,
+        selfTransfer: false,
+        transitVisaRequired: false,
+        transitVisaNote: 'Единый билет. Багаж летит прямо до конечного пункта.',
+        baggageRecheck: false,
+      }
+    ],
+    segments: [
+      {
+        departureAirport: params.fromCode,
+        arrivalAirport: 'IST',
+        departureCity: fromCity,
+        arrivalCity: 'Стамбул',
+        departureTerminal: 'T1',
+        arrivalTerminal: 'T1',
+        departureTime: '13:00',
+        arrivalTime: '16:20',
+        duration: '3ч 20м',
+        flightNumber: 'TK-1422',
+        airline: 'Turkish Airlines',
+        aircraft: 'Airbus A330-300'
+      },
+      {
+        departureAirport: 'IST',
+        arrivalAirport: params.toCode,
+        departureCity: 'Стамбул',
+        arrivalCity: toCity,
+        departureTerminal: 'T1',
+        arrivalTerminal: 'T2',
+        departureTime: '18:30',
+        arrivalTime: '20:15',
+        duration: '1ч 45м',
+        flightNumber: 'TK-701',
+        airline: 'Turkish Airlines',
+        aircraft: 'Airbus A321neo'
+      }
+    ],
+    airlines: ['Turkish Airlines'],
+    bestPrice: optPrice,
+    averageMarketPrice: Math.round(optPrice * 1.2),
+    priceDiscountPercent: 18,
+    baggageIncluded: true,
+    carryOnIncluded: true,
+    selfTransfer: false,
+    baggageRecheck: false,
+    transitVisaNote: 'Единая транзитная зона IST. Питание на борту включено, багаж 23 кг.',
+    verdict: {
+      action: 'buy_now',
+      badgeTitle: 'Оптимальный выбор',
+      explanation: 'Идеальный баланс: единый билет Turkish Airlines (включая багаж 23 кг и горячее питание), комфортная пересадка 2ч 10м без смены терминала.',
+      confidencePercent: 94,
+    },
+    sellers: [
+      {
+        id: 'sel_tk_1',
+        sellerName: 'Официальный сайт Turkish Airlines',
+        isAirlineDirect: true,
+        price: optPrice,
+        baggageIncluded: true,
+        carryOnIncluded: true,
+        bookingUrl: 'https://turkishairlines.com',
+        rating: 4.95
+      },
+      {
+        id: 'sel_tk_2',
+        sellerName: 'КупиБилет',
+        isAirlineDirect: false,
+        price: optPrice - 200,
+        baggageIncluded: true,
+        carryOnIncluded: true,
+        bookingUrl: 'https://kupibilet.ru',
+        rating: 4.8
+      }
+    ],
+    isOptimal: true,
   });
 
   return flights;
 };
 
-// Generates 14-day heatmap around selected departure date
 export const generatePriceHeatmap = (baseDateStr: string, basePrice: number): DatePriceHeatmap[] => {
   const result: DatePriceHeatmap[] = [];
   const baseDate = new Date(baseDateStr || Date.now());
@@ -448,7 +395,7 @@ export const generatePriceHeatmap = (baseDateStr: string, basePrice: number): Da
       dayOfWeek: dayNames[cur.getDay()],
       dayOfMonth: cur.getDate(),
       price: Math.max(5000, dayPrice),
-      isLowest: offset === -2, // highlight best day
+      isLowest: offset === -2,
       isHighest: offset === 4,
       isPast: offset < 0 && cur < new Date(),
     });

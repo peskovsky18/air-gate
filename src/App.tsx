@@ -124,6 +124,7 @@ export const App: React.FC = () => {
                 setIsAirportModalOpen(true);
               }}
               onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
+              onOpenFilterModal={() => setIsFilterModalOpen(true)}
               isLoading={isLoading}
             />
 

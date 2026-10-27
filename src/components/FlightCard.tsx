@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Clock, 
   Luggage, 
   Share2, 
   Heart, 
   ChevronDown, 
   ExternalLink,
-  AlertCircle
+  AlertTriangle,
+  CheckCircle2,
+  Bus,
+  ArrowRight,
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import { Flight } from '../types';
 import { haptic, shareToTelegram } from '../lib/telegram';
@@ -23,14 +27,14 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   flight,
   isFavorite,
   onToggleFavorite,
-  onTrackFlight,
 }) => {
   const [showSellers, setShowSellers] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(flight.stopsCount > 0);
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     haptic.medium();
-    const shareText = `✈️ Билет ${flight.fromCity} (${flight.fromCode}) → ${flight.toCity} (${flight.toCode})\n💰 Лучшая цена: ${flight.bestPrice.toLocaleString('ru-RU')} ₽\n⏱ В пути: ${flight.durationTotal}\nАвиакомпания: ${flight.airlines.join(', ')}`;
+    const shareText = `✈️ Рейс ${flight.fromCity} (${flight.fromCode}) → ${flight.toCity} (${flight.toCode})\n💰 Лучшая цена: ${flight.bestPrice.toLocaleString('ru-RU')} ₽\n⏱ В пути: ${flight.durationTotal}\n💡 Вердикт: ${flight.verdict.badgeTitle} — ${flight.verdict.explanation}`;
     shareToTelegram(shareText);
   };
 
@@ -40,21 +44,40 @@ export const FlightCard: React.FC<FlightCardProps> = ({
     onToggleFavorite(flight.id);
   };
 
+  const isMultiHub = Boolean(flight.multiHubAlternative);
+
   return (
-    <div className="ios-card mb-3 mx-4 overflow-hidden">
-      {/* Top Header Row */}
-      <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between hairline-b">
+    <div className={`ios-card mb-3.5 mx-4 overflow-hidden border ${
+      isMultiHub ? 'border-blue-500/30' : 'border-transparent'
+    }`}>
+      {/* 1. Multi-Hub Smart Ground+Flight Banner */}
+      {flight.multiHubAlternative && (
+        <div className="bg-blue-600/10 dark:bg-blue-500/15 px-4 py-2.5 hairline-b flex items-start gap-2.5">
+          <Bus className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <span className="font-semibold text-blue-700 dark:text-blue-300">
+              {flight.multiHubAlternative.badgeText}:
+            </span>
+            <span className="text-zinc-600 dark:text-zinc-300 ml-1">
+              {flight.multiHubAlternative.groundTransport} ({flight.multiHubAlternative.groundPrice} ₽) + рейс за {flight.multiHubAlternative.flightPrice.toLocaleString('ru-RU')} ₽.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Top Bar: Airlines & Actions */}
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between hairline-b">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-black dark:text-white tracking-tight">
             {flight.airlines.join(', ')}
           </span>
           {flight.isCheapest && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400">
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400">
               Лучшая цена
             </span>
           )}
           {flight.isFastest && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
               Быстрый
             </span>
           )}
@@ -66,7 +89,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             className="p-1.5 rounded-full text-zinc-400 hover:text-black dark:hover:text-white pressable"
             aria-label="Поделиться"
           >
-            <Share2 className="w-4 h-4 stroke-[1.8]" />
+            <Share2 className="w-4 h-4" />
           </button>
           <button
             onClick={handleFavoriteClick}
@@ -75,15 +98,38 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             }`}
             aria-label="Избранное"
           >
-            <Heart className={`w-4 h-4 stroke-[1.8] ${isFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
         </div>
+      </div>
+
+      {/* 2. Expert Verdict Box */}
+      <div className="mx-4 mt-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 hairline-b">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1.5">
+            {flight.verdict.action === 'buy_now' ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+            )}
+            <span className={`text-xs font-bold ${
+              flight.verdict.action === 'buy_now' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
+            }`}>
+              {flight.verdict.badgeTitle}
+            </span>
+          </div>
+          <span className="text-[10px] text-zinc-400 font-medium">
+            Точность {flight.verdict.confidencePercent}%
+          </span>
+        </div>
+        <p className="text-[11px] text-zinc-600 dark:text-zinc-300 leading-snug">
+          {flight.verdict.explanation}
+        </p>
       </div>
 
       {/* Flight Schedule Details */}
       <div className="p-4">
         <div className="flex items-center justify-between">
-          {/* Departure */}
           <div>
             <div className="text-[22px] font-bold text-black dark:text-white tracking-tight tabular">
               {flight.departureTime}
@@ -91,12 +137,11 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 mt-0.5">
               {flight.fromCode}
             </div>
-            <div className="text-[11px] text-zinc-400 truncate max-w-[85px]">
+            <div className="text-[11px] text-zinc-400 truncate max-w-[90px]">
               {flight.fromCity}
             </div>
           </div>
 
-          {/* Route Line & Duration */}
           <div className="flex-1 px-4 flex flex-col items-center">
             <span className="text-[11px] font-medium text-zinc-400 mb-1 tabular">
               {flight.durationTotal}
@@ -108,14 +153,19 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                 )}
               </div>
             </div>
-            <span className="text-[10px] text-zinc-400 mt-1">
+            <button
+              onClick={() => {
+                haptic.selection();
+                setShowTimeline(!showTimeline);
+              }}
+              className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-medium pressable"
+            >
               {flight.stopsCount === 0
-                ? 'Прямой'
-                : `${flight.stopsCount} пересадка (${flight.layovers.map(l => l.city).join(', ')})`}
-            </span>
+                ? 'Прямой рейс'
+                : `${flight.stopsCount} пересадка (${flight.layovers.map(l => l.city).join(', ')}) ↓`}
+            </button>
           </div>
 
-          {/* Arrival */}
           <div className="text-right">
             <div className="text-[22px] font-bold text-black dark:text-white tracking-tight tabular">
               {flight.arrivalTime}
@@ -123,24 +173,77 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 mt-0.5">
               {flight.toCode}
             </div>
-            <div className="text-[11px] text-zinc-400 truncate max-w-[85px]">
+            <div className="text-[11px] text-zinc-400 truncate max-w-[90px]">
               {flight.toCity}
             </div>
           </div>
         </div>
 
-        {/* Layover Alert if short */}
-        {flight.layovers.some(l => l.isShort) && (
-          <div className="mt-3 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-2 text-[11px]">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Короткая пересадка 45 мин в Стамбуле. Багаж перегружается автоматически.</span>
+        {/* 3. Visual Transfer Timeline (Наглядный таймлайн пересадки) */}
+        {flight.stopsCount > 0 && showTimeline && (
+          <div className="mt-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-black/[0.04] dark:border-white/[0.06] space-y-2 text-xs">
+            {/* Segment 1 */}
+            <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-300">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{flight.segments[0]?.departureTime}</span>
+                <span>{flight.segments[0]?.departureCity} ({flight.segments[0]?.departureAirport})</span>
+                {flight.segments[0]?.departureTerminal && (
+                  <span className="text-[10px] text-zinc-400">Терминал {flight.segments[0]?.departureTerminal}</span>
+                )}
+              </div>
+              <span className="text-[11px] text-zinc-400">{flight.segments[0]?.duration}</span>
+            </div>
+
+            {/* Layover Middle Node */}
+            <div className="my-1.5 py-2 px-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-l-2 border-orange-500 space-y-1">
+              <div className="flex items-center justify-between font-medium text-black dark:text-white">
+                <span>⏱ Стыковка {flight.layovers[0]?.duration} в аэропорту {flight.layovers[0]?.airportCode} ({flight.layovers[0]?.city})</span>
+              </div>
+
+              {/* Terminal change warning */}
+              {flight.layovers[0]?.terminalChange && (
+                <div className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1 font-medium">
+                  <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                  <span>{flight.layovers[0].terminalChange}</span>
+                </div>
+              )}
+
+              {/* Baggage recheck warning */}
+              {flight.baggageRecheck ? (
+                <div className="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3 flex-shrink-0" />
+                  <span>Повторная сдача багажа (самостоятельная стыковка). Нужно забрать багаж и снова сдать.</span>
+                </div>
+              ) : (
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                  <span>Сквозная регистрация: багаж летит до конечного пункта.</span>
+                </div>
+              )}
+
+              {/* Transit visa note */}
+              <div className="text-[10px] text-zinc-500">
+                🛂 {flight.transitVisaNote}
+              </div>
+            </div>
+
+            {/* Segment 2 */}
+            {flight.segments[1] && (
+              <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-300">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{flight.segments[1]?.departureTime}</span>
+                  <span>{flight.segments[1]?.departureCity} → {flight.segments[1]?.arrivalCity} ({flight.segments[1]?.arrivalAirport})</span>
+                </div>
+                <span className="text-[11px] text-zinc-400">{flight.segments[1]?.duration}</span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Baggage Info */}
+        {/* Baggage status pill */}
         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-zinc-500">
           <Luggage className="w-3.5 h-3.5" />
-          <span>{flight.baggageIncluded ? 'Багаж 23 кг включен' : 'Только ручная кладь'}</span>
+          <span>{flight.baggageIncluded ? 'Багаж 23 кг включен' : 'Тариф без багажа (только ручная кладь 10 кг)'}</span>
         </div>
 
         {/* Price & Checkout Row */}
@@ -150,7 +253,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               {flight.bestPrice.toLocaleString('ru-RU')} ₽
             </div>
             <div className="text-[11px] text-zinc-400">
-              Лучший тариф на рынке
+              Средняя цена: {flight.averageMarketPrice.toLocaleString('ru-RU')} ₽
             </div>
           </div>
 
@@ -161,12 +264,12 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             onClick={() => haptic.medium()}
             className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-[13px] tracking-tight flex items-center gap-1.5 pressable"
           >
-            <span>Выбрать</span>
+            <span>Купить</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 
-        {/* Compare Sellers Disclosure */}
+        {/* Compare All Sellers */}
         <button
           onClick={() => {
             haptic.selection();
