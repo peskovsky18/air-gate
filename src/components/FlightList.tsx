@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { SlidersHorizontal, Search } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { Flight, FilterState } from '../types';
 import { FlightCard } from './FlightCard';
 import { haptic } from '../lib/telegram';
@@ -45,17 +45,6 @@ export const FlightList: React.FC<FlightListProps> = ({
 
   return (
     <div className="relative pb-12">
-      {/* Market Scan Info Banner */}
-      <div className="mx-4 mb-2 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 text-xs">
-        <div className="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-200 text-[13px]">
-          <Search className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-          <span>Сравнение цен со всех сервисов в реальном времени</span>
-        </div>
-        <p className="text-zinc-600 dark:text-zinc-300 mt-1 leading-snug">
-          В каждой карточке собраны цены от КупиБилет, Kiwi.com, City.Travel и официальных сайтов авиакомпаний. Выбирайте лучшую цену и покупайте без наценок.
-        </p>
-      </div>
-
       {/* Filter Tabs & Modal Trigger */}
       <div className="px-4 py-2 flex items-center justify-between gap-2">
         <div className="flex-1 p-0.5 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 flex items-center relative">
