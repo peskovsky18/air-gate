@@ -30,30 +30,38 @@ export interface LayoverInfo {
   duration: string;
   isShort?: boolean;
   isNight?: boolean;
-  terminalChange?: string;         // e.g. "Смена терминала: 1 → 2"
-  selfTransfer?: boolean;          // true if separate tickets
-  transitVisaRequired?: boolean;   // true if transit visa needed
-  transitVisaNote?: string;        // e.g. "Транзитная зона открыта 24ч, виза не нужна"
-  baggageRecheck?: boolean;        // true if luggage must be picked up and checked again
+  terminalChange?: string;
+  selfTransfer?: boolean;
+  transitVisaRequired?: boolean;
+  transitVisaNote?: string;
+  baggageRecheck?: boolean;
+  hasConnectionGuarantee?: boolean; // Smart connection insurance
 }
 
 export interface MultiHubInfo {
   isAlternative: boolean;
   originCity: string;
   originCode: string;
-  groundTransport: string;         // e.g. "Автобус Lux Express из Риги (4ч 15м)"
-  groundPrice: number;             // e.g. 1200
-  flightPrice: number;             // e.g. 9800
-  netSavings: number;              // e.g. 4200
-  badgeText: string;               // "Экономия 4 200 ₽ с учетом автобуса"
+  groundTransport: string;
+  groundPrice: number;
+  flightPrice: number;
+  netSavings: number;
+  badgeText: string;
 }
 
 export interface PriceVerdict {
   action: 'buy_now' | 'wait' | 'fair_price';
-  badgeTitle: string;              // "Брать сейчас" | "Подождать" | "Справедливая цена"
-  explanation: string;             // "Цена на историческом минимуме за последние 3 месяца"
-  confidencePercent: number;       // e.g. 92
-  expectedChange?: string;         // "+18% в течение 48 часов"
+  badgeTitle: string;
+  explanation: string;
+  confidencePercent: number;
+  expectedChange?: string;
+}
+
+export interface PaymentBreakdown {
+  rubPrice: number;             // Оплата МИР / СБП / картой РФ
+  foreignPriceUsd?: number;     // Оплата картой зарубежного банка USD
+  foreignPriceEur?: number;     // Оплата картой зарубежного банка EUR
+  foreignCurrencySavingsRub?: number; // e.g. 800 ₽ экономия при оплате в EUR
 }
 
 export interface SellerOffer {
@@ -61,6 +69,8 @@ export interface SellerOffer {
   sellerName: string;
   isAirlineDirect: boolean;
   price: number;
+  paymentRub: number;
+  paymentForeign?: { amount: number; currency: 'EUR' | 'USD'; approxRub: number; savingsRub: number };
   baggageIncluded: boolean;
   carryOnIncluded: boolean;
   bookingUrl: string;
@@ -69,6 +79,7 @@ export interface SellerOffer {
 
 export interface Flight {
   id: string;
+  flightType: 'regular' | 'charter' | 'smart_combination'; // Regular, Charter, or Smart Connection
   fromCode: string;
   fromCity: string;
   toCode: string;
@@ -89,11 +100,16 @@ export interface Flight {
   carryOnIncluded: boolean;
   sellers: SellerOffer[];
 
-  // Differentiation & Transparency Features
+  // Payment methods comparison
+  paymentBreakdown: PaymentBreakdown;
+
+  // Features
   verdict: PriceVerdict;
   multiHubAlternative?: MultiHubInfo;
   selfTransfer: boolean;
   baggageRecheck: boolean;
+  hasConnectionGuarantee?: boolean;
+  charterNote?: string;
   terminalChangeWarning?: string;
   transitVisaNote: string;
   isCheapest?: boolean;
