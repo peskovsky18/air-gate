@@ -1,7 +1,7 @@
 import React from 'react';
-import { ArrowUpDown, Calendar, Users, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import { ArrowUpDown, Calendar, Users, ChevronRight } from 'lucide-react';
 import { SearchParams } from '../types';
-import { formatDateDisplayRu, addDaysToYMD, getTodayYMD } from '../lib/dateUtils';
+import { formatDateDisplayRu } from '../lib/dateUtils';
 import { haptic } from '../lib/telegram';
 
 interface SearchFormProps {
@@ -20,7 +20,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   onSearch,
   onOpenAirportModal,
   onOpenCalendarModal,
-  onOpenFilterModal,
   isLoading,
 }) => {
   const handleSwap = (e: React.MouseEvent) => {
@@ -38,15 +37,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     onSearch(updated);
   };
 
-  const handleQuickDate = (daysAhead: number) => {
-    haptic.selection();
-    const todayStr = getTodayYMD();
-    const newDate = addDaysToYMD(todayStr, daysAhead);
-    const updated: SearchParams = { ...searchParams, departureDate: newDate };
-    onChangeParams(updated);
-    onSearch(updated);
-  };
-
   return (
     <div className="p-4 space-y-3">
       {/* Route & Parameters Card */}
@@ -60,7 +50,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div>
-            <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+            <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
               Откуда
             </div>
             <div className="text-[17px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
@@ -68,10 +58,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-mono font-medium text-zinc-500">
+            <span className="text-sm font-mono font-medium text-zinc-500 dark:text-zinc-400">
               {searchParams.fromCode}
             </span>
-            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
           </div>
         </button>
 
@@ -96,7 +86,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div>
-            <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+            <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
               Куда
             </div>
             <div className="text-[17px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
@@ -104,10 +94,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-mono font-medium text-zinc-500">
+            <span className="text-sm font-mono font-medium text-zinc-500 dark:text-zinc-400">
               {searchParams.toCode}
             </span>
-            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
           </div>
         </button>
 
@@ -120,9 +110,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div className="flex items-center gap-2.5">
-            <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+            <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <div>
-              <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+              <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Дата вылета
               </div>
               <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5 capitalize">
@@ -132,7 +122,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Выбрать день</span>
-            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
           </div>
         </button>
 
@@ -148,9 +138,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable"
         >
           <div className="flex items-center gap-2.5">
-            <Users className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <div>
-              <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+              <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Пассажиры и класс
               </div>
               <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
@@ -159,75 +149,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-zinc-400 font-medium">Нажмите +1</span>
-            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+            <span className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">+1</span>
+            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
           </div>
-        </button>
-      </div>
-
-      {/* Quick Date Presets Row */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-        <span className="text-[11px] text-zinc-400 pl-1 whitespace-nowrap">Быстро:</span>
-        {[
-          { label: 'Завтра', days: 1 },
-          { label: 'Через 3 дня', days: 3 },
-          { label: 'Через неделю', days: 7 },
-          { label: 'Через 2 недели', days: 14 },
-          { label: 'Через месяц', days: 30 },
-        ].map(item => (
-          <button
-            key={item.label}
-            onClick={() => handleQuickDate(item.days)}
-            className="px-2.5 py-1 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 text-xs font-medium text-black dark:text-white whitespace-nowrap pressable"
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Quick Filters Row */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-        <button
-          onClick={() => {
-            haptic.selection();
-            onOpenFilterModal();
-          }}
-          className="px-3 py-1.5 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 text-xs font-medium text-black dark:text-white flex items-center gap-1.5 pressable"
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span>Все фильтры</span>
-        </button>
-
-        <button
-          onClick={() => {
-            haptic.selection();
-            const updated = { ...searchParams, flexibleDates: !searchParams.flexibleDates };
-            onChangeParams(updated);
-            onSearch(updated);
-          }}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors pressable ${
-            searchParams.flexibleDates
-              ? 'bg-blue-600 text-white'
-              : 'bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-          }`}
-        >
-          ±3 дня
-        </button>
-
-        <button
-          onClick={() => {
-            haptic.selection();
-            const updated = { ...searchParams, includeNearbyAirports: !searchParams.includeNearbyAirports };
-            onChangeParams(updated);
-            onSearch(updated);
-          }}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors pressable ${
-            searchParams.includeNearbyAirports
-              ? 'bg-blue-600 text-white'
-              : 'bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-          }`}
-        >
-          Соседние хабы
         </button>
       </div>
 
@@ -243,7 +167,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         {isLoading ? (
           <div className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>Сканирование 48 источников...</span>
+            <span>Поиск билетов...</span>
           </div>
         ) : (
           'Найти билеты'

@@ -15,26 +15,12 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const user = getTelegramUser();
 
-  const getTitle = () => {
-    switch (activeTab) {
-      case 'search': return 'Поиск билетов';
-      case 'subscriptions': return 'Подписки';
-      case 'explore': return 'Куда угодно';
-      case 'favorites': return 'Избранное';
-    }
-  };
-
   return (
-    <header className="sticky top-0 z-40 ios-chrome hairline-b px-4 pt-3 pb-2 transition-colors">
+    <header className="sticky top-0 z-40 ios-chrome hairline-b px-4 py-3 transition-colors">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[22px] font-bold tracking-tighter text-black dark:text-white leading-none">
-            {getTitle()}
-          </h1>
-          <p className="text-[12px] font-normal text-zinc-500 dark:text-zinc-400 mt-0.5 tracking-tight">
-            Честный поиск без наценок и рекламы
-          </p>
-        </div>
+        <h1 className="text-[22px] font-bold tracking-tight text-black dark:text-white leading-none">
+          AIR gate
+        </h1>
 
         <div className="flex items-center gap-2">
           {activeTab !== 'subscriptions' && (
@@ -43,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
                 haptic.selection();
                 onTabChange('subscriptions');
               }}
-              className="relative p-2 rounded-full text-zinc-600 dark:text-zinc-300 pressable"
+              className="relative p-2 rounded-full text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white pressable"
               aria-label="Подписки"
             >
               <Bell className="w-5 h-5 stroke-[1.8]" />
@@ -53,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          <div className="w-8 h-8 rounded-full bg-zinc-200/80 dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-800 dark:text-zinc-200 uppercase tracking-tight">
+          <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center text-xs font-semibold uppercase tracking-tight">
             {user.firstName[0]}
           </div>
         </div>

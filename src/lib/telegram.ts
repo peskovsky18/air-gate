@@ -15,19 +15,42 @@ export const getTelegramWebApp = () => {
   return null;
 };
 
-export const initTelegramApp = () => {
+export const syncTheme = () => {
   const tg = getTelegramWebApp();
-  if (!tg) return null;
+  const isDark = (tg && tg.colorScheme === 'dark') || (!tg && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
+
+export const initTelegramApp = () => {
+  syncTheme();
+
+  const tg = getTelegramWebApp();
+  if (tg) {
+    try {
+      tg.ready();
+      tg.expand();
+      if (typeof tg.onEvent === 'function') {
+        tg.onEvent('themeChanged', syncTheme);
+      }
+      if (tg.enableClosingConfirmation) {
+        tg.enableClosingConfirmation();
+      }
+    } catch (e) {
+      console.warn('Telegram WebApp init warning:', e);
+    }
+  }
 
   try {
-    tg.ready();
-    tg.expand();
-    if (tg.enableClosingConfirmation) {
-      tg.enableClosingConfirmation();
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', syncTheme);
     }
-  } catch (e) {
-    console.warn('Telegram WebApp init warning:', e);
-  }
+  } catch (e) {}
+
   return tg;
 };
 
@@ -90,7 +113,7 @@ export const getTelegramUser = () => {
     const user = tg.initDataUnsafe.user;
     return {
       id: String(user.id),
-      firstName: user.first_name || 'Путешественник',
+      firstName: user.first_name || 'Вы',
       lastName: user.last_name || '',
       username: user.username || 'user',
       languageCode: user.language_code || 'ru',
@@ -99,9 +122,9 @@ export const getTelegramUser = () => {
   }
   return {
     id: 'tg_guest_7721',
-    firstName: 'Алексей',
+    firstName: 'Вы',
     lastName: '',
-    username: 'alex_travel',
+    username: 'traveler',
     languageCode: 'ru',
     photoUrl: null,
   };
