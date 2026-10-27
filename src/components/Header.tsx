@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
             {getTitle()}
           </h1>
           <p className="text-[12px] font-normal text-zinc-500 dark:text-zinc-400 mt-0.5 tracking-tight">
-            Сравнение всех доступных тарифов
+            Честный поиск без наценок и рекламы
           </p>
         </div>
 

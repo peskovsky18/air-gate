@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Globe, MapPin } from 'lucide-react';
+import { Search, X, Globe, MapPin, Plane } from 'lucide-react';
 import { Airport } from '../types';
 import { POPULAR_AIRPORTS } from '../data/airports';
 import { haptic } from '../lib/telegram';
@@ -8,7 +8,7 @@ import { haptic } from '../lib/telegram';
 interface AirportSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (airport: Airport | { code: 'ANY'; city: 'Куда угодно'; country: 'Весь мир'; name: 'Любое направление' }) => void;
+  onSelect: (airport: Airport | { code: string; city: string; country: string; name: string }) => void;
   mode: 'from' | 'to';
   currentCode?: string;
 }
@@ -21,10 +21,26 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
   currentCode,
 }) => {
   const [query, setQuery] = useState('');
+  const [activeRegion, setActiveRegion] = useState<'all' | 'baltic' | 'europe' | 'east' | 'cis'>('all');
 
   const filteredAirports = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return POPULAR_AIRPORTS;
+    let list = POPULAR_AIRPORTS;
+
+    if (!q && activeRegion !== 'all') {
+      if (activeRegion === 'baltic') {
+        list = list.filter(a => ['Латвия', 'Эстония', 'Литва', 'Финляндия'].includes(a.country));
+      } else if (activeRegion === 'europe') {
+        list = list.filter(a => ['Италия', 'Испания', 'Франция', 'Германия', 'Нидерланды', 'Австрия', 'Чехия', 'Польша', 'Греция', 'Португалия', 'Великобритания', 'Венгрия', 'Кипр'].includes(a.country));
+      } else if (activeRegion === 'east') {
+        list = list.filter(a => ['Турция', 'ОАЭ', 'Катар', 'Армения', 'Грузия', 'Таиланд', 'Индонезия'].includes(a.country));
+      } else if (activeRegion === 'cis') {
+        list = list.filter(a => ['Россия', 'Беларусь', 'Узбекистан', 'Казахстан', 'Азербайджан'].includes(a.country));
+      }
+    }
+
+    if (!q) return list;
+
     return POPULAR_AIRPORTS.filter(
       a =>
         a.city.toLowerCase().includes(q) ||
@@ -32,9 +48,11 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
         a.country.toLowerCase().includes(q) ||
         a.name.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, activeRegion]);
 
   if (!isOpen) return null;
+
+  const isCustomCode = query.trim().length === 3 && filteredAirports.length === 0;
 
   return (
     <AnimatePresence>
@@ -49,7 +67,7 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
             haptic.light();
             onClose();
           }}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         />
 
         {/* Sheet */}
@@ -58,7 +76,7 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
-          className="relative w-full max-w-lg max-h-[85vh] flex flex-col bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[24px] shadow-ios-modal overflow-hidden"
+          className="relative w-full max-w-lg max-h-[88vh] flex flex-col bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[28px] shadow-2xl overflow-hidden"
         >
           {/* Drag Handle */}
           <div className="w-full pt-3 pb-2 flex items-center justify-center">
@@ -72,7 +90,7 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
                 {mode === 'from' ? 'Город отправления' : 'Город прибытия'}
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
-                {mode === 'from' ? 'Выберите аэропорт вылета' : 'Выберите пункт назначения'}
+                Поиск по любым аэропортам и кодам IATA
               </p>
             </div>
             <button
@@ -88,16 +106,16 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
           </div>
 
           {/* Search Input */}
-          <div className="px-5 pb-3">
+          <div className="px-5 pb-2.5">
             <div className="relative flex items-center">
-              <Search className="w-4 h-4 absolute left-3 text-zinc-400 pointer-events-none" />
+              <Search className="w-4 h-4 absolute left-3.5 text-zinc-400 pointer-events-none" />
               <input
                 type="text"
                 autoFocus
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Поиск по городу или коду..."
-                className="w-full pl-9 pr-8 py-2 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-xl text-sm font-normal text-black dark:text-white placeholder-zinc-400 focus:outline-none transition-all"
+                placeholder="Город, страна или код (например: Рим, FCO)..."
+                className="w-full pl-9 pr-8 py-2.5 bg-zinc-200/70 dark:bg-zinc-800/80 rounded-xl text-[14px] font-normal text-black dark:text-white placeholder-zinc-400 focus:outline-none transition-all"
               />
               {query && (
                 <button
@@ -110,6 +128,34 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
             </div>
           </div>
 
+          {/* Region Tabs (if no query) */}
+          {!query && (
+            <div className="px-5 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'all', label: 'Все' },
+                { id: 'baltic', label: 'Балтия' },
+                { id: 'europe', label: 'Европа' },
+                { id: 'east', label: 'Восток и Азия' },
+                { id: 'cis', label: 'СНГ и Россия' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    haptic.selection();
+                    setActiveRegion(tab.id as any);
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors pressable ${
+                    activeRegion === tab.id
+                      ? 'bg-black text-white dark:bg-white dark:text-black font-semibold'
+                      : 'bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* "Куда угодно" Option */}
           {mode === 'to' && !query && (
             <div className="px-5 pb-2">
@@ -120,11 +166,11 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
                     code: 'ANY',
                     city: 'Куда угодно',
                     country: 'Весь мир',
-                    name: 'Любое выгодное направление',
+                    name: 'Лучшие предложения по миру',
                   });
                   onClose();
                 }}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl ios-card text-left pressable"
+                className="w-full flex items-center gap-3 p-3 rounded-2xl ios-card text-left pressable border border-blue-500/20"
               >
                 <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
                   <Globe className="w-4 h-4 stroke-[1.8]" />
@@ -134,46 +180,42 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
                     Куда угодно
                   </div>
                   <div className="text-[11px] text-zinc-400">
-                    Поиск самых выгодных билетов по всем странам
+                    Сравнить самые дешевые билеты по всем странам
                   </div>
                 </div>
               </button>
             </div>
           )}
 
-          {/* Hub suggestions */}
-          {!query && (
-            <div className="px-5 py-1">
-              <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide mb-1.5">
-                Популярные хабы
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { city: 'Рига', code: 'RIX' },
-                  { city: 'Таллин', code: 'TLL' },
-                  { city: 'Вильнюс', code: 'VNO' },
-                  { city: 'Москва', code: 'MOW' },
-                  { city: 'Стамбул', code: 'IST' },
-                  { city: 'Дубай', code: 'DXB' },
-                  { city: 'Ереван', code: 'EVN' },
-                  { city: 'Тбилиси', code: 'TBS' },
-                ].map(item => (
-                  <button
-                    key={item.code}
-                    onClick={() => {
-                      const found = POPULAR_AIRPORTS.find(a => a.code === item.code);
-                      if (found) {
-                        haptic.selection();
-                        onSelect(found);
-                        onClose();
-                      }
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-zinc-200/70 dark:bg-zinc-800 text-xs font-medium text-black dark:text-white pressable"
-                  >
-                    {item.city} <span className="text-zinc-400">{item.code}</span>
-                  </button>
-                ))}
-              </div>
+          {/* Custom IATA Code Option */}
+          {isCustomCode && (
+            <div className="px-5 pb-2">
+              <button
+                onClick={() => {
+                  const codeUpper = query.trim().toUpperCase();
+                  haptic.medium();
+                  onSelect({
+                    code: codeUpper,
+                    city: `Аэропорт ${codeUpper}`,
+                    country: 'Международный',
+                    name: `Код IATA ${codeUpper}`,
+                  });
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl ios-card text-left pressable border border-blue-500/40"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-mono font-bold text-xs">
+                  {query.trim().toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-[14px] font-semibold text-black dark:text-white">
+                    Искать по коду {query.trim().toUpperCase()}
+                  </div>
+                  <div className="text-[11px] text-zinc-400">
+                    Прямой поиск по международному коду аэропорта
+                  </div>
+                </div>
+              </button>
             </div>
           )}
 
@@ -207,7 +249,7 @@ export const AirportSelectModal: React.FC<AirportSelectModalProps> = ({
                         {airport.name}, {airport.country}
                       </div>
                     </div>
-                    <span className="text-xs font-mono font-semibold text-zinc-500 dark:text-zinc-400">
+                    <span className="text-xs font-mono font-semibold text-zinc-500 dark:text-zinc-400 px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800">
                       {airport.code}
                     </span>
                   </button>

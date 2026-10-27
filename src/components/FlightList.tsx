@@ -86,7 +86,7 @@ export const FlightList: React.FC<FlightListProps> = ({
       <div className="px-4 pt-1 pb-2 flex items-center justify-between text-[11px] text-zinc-500">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" />
-          <span>Сканирование завершено: 16 авиакомпаний • 8 онлайн-касс</span>
+          <span>Честное сравнение рынка: 16 авиалиний • 8 продавцов без наценок</span>
         </div>
         <span className="font-semibold text-black dark:text-white tabular">
           {filteredFlights.length} из {flights.length} рейсов
