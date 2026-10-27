@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpDown, Calendar, Users, ChevronRight } from 'lucide-react';
+import { ArrowUpDown, Calendar, Users, ChevronRight, Search } from 'lucide-react';
 import { SearchParams } from '../types';
 import { formatDateDisplayRu } from '../lib/dateUtils';
 import { haptic } from '../lib/telegram';
@@ -39,138 +39,129 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
   return (
     <div className="p-4 space-y-3">
-      {/* Route & Parameters Card */}
-      <div className="ios-card overflow-hidden">
-        {/* Row 1: Откуда */}
-        <button
-          onClick={() => {
-            haptic.selection();
-            onOpenAirportModal('from');
-          }}
-          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
-        >
-          <div>
-            <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-              Откуда
+      {/* Flight Dispatch Console */}
+      <div className="ios-card overflow-hidden border border-black/[0.08] dark:border-white/[0.12]">
+        {/* Terminal Route Board: From ── Swap ── To */}
+        <div className="relative p-4 hairline-b grid grid-cols-2 gap-3 items-center">
+          {/* Departure Airport Block */}
+          <button
+            onClick={() => {
+              haptic.selection();
+              onOpenAirportModal('from');
+            }}
+            className="text-left pressable pr-4"
+          >
+            <div className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 dark:text-zinc-400 uppercase">
+              ОТКУДА / FROM
             </div>
-            <div className="text-[17px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
+            <div className="text-[28px] font-black font-mono tracking-tight text-blue-600 dark:text-blue-400 leading-none mt-1">
+              {searchParams.fromCode}
+            </div>
+            <div className="text-[14px] font-bold text-black dark:text-white truncate mt-0.5">
               {searchParams.fromCity}
             </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-mono font-medium text-zinc-500 dark:text-zinc-400">
-              {searchParams.fromCode}
-            </span>
-            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          </div>
-        </button>
+          </button>
 
-        {/* Swap Button */}
-        <div className="relative h-0">
+          {/* Bidirectional Route Swap Button */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <button
+              onClick={handleSwap}
+              disabled={searchParams.toCode === 'ANY'}
+              className="w-9 h-9 rounded-full bg-white dark:bg-zinc-800 border border-black/[0.1] dark:border-white/[0.15] shadow-md flex items-center justify-center text-zinc-700 dark:text-zinc-200 pressable disabled:opacity-30 active:rotate-180 transition-transform duration-200"
+              aria-label="Поменять местами"
+            >
+              <ArrowUpDown className="w-4 h-4 stroke-[2.2]" />
+            </button>
+          </div>
+
+          {/* Destination Airport Block */}
           <button
-            onClick={handleSwap}
-            disabled={searchParams.toCode === 'ANY'}
-            className="absolute right-5 -top-3.5 z-10 w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm flex items-center justify-center text-zinc-600 dark:text-zinc-300 pressable disabled:opacity-30"
-            aria-label="Поменять местами"
+            onClick={() => {
+              haptic.selection();
+              onOpenAirportModal('to');
+            }}
+            className="text-right pressable pl-4"
           >
-            <ArrowUpDown className="w-3.5 h-3.5" />
+            <div className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 dark:text-zinc-400 uppercase">
+              КУДА / TO
+            </div>
+            <div className="text-[28px] font-black font-mono tracking-tight text-blue-600 dark:text-blue-400 leading-none mt-1">
+              {searchParams.toCode}
+            </div>
+            <div className="text-[14px] font-bold text-black dark:text-white truncate mt-0.5">
+              {searchParams.toCity}
+            </div>
           </button>
         </div>
 
-        {/* Row 2: Куда */}
-        <button
-          onClick={() => {
-            haptic.selection();
-            onOpenAirportModal('to');
-          }}
-          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
-        >
-          <div>
-            <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-              Куда
-            </div>
-            <div className="text-[17px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
-              {searchParams.toCity}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-mono font-medium text-zinc-500 dark:text-zinc-400">
-              {searchParams.toCode}
-            </span>
-            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          </div>
-        </button>
-
-        {/* Row 3: Дата вылета */}
-        <button
-          onClick={() => {
-            haptic.selection();
-            onOpenCalendarModal();
-          }}
-          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
-        >
-          <div className="flex items-center gap-2.5">
-            <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <div>
-              <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                Дата вылета
+        {/* Date and Passengers Grid */}
+        <div className="grid grid-cols-2 divide-x divide-black/[0.08] dark:divide-white/[0.1]">
+          {/* Departure Date */}
+          <button
+            onClick={() => {
+              haptic.selection();
+              onOpenCalendarModal();
+            }}
+            className="p-3.5 text-left pressable hover:bg-black/[0.02] dark:hover:bg-white/[0.02] flex items-center justify-between"
+          >
+            <div className="min-w-0 pr-1">
+              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span>ДАТА ВЫЛЕТА</span>
               </div>
-              <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5 capitalize">
+              <div className="text-[14px] font-bold text-black dark:text-white capitalize truncate mt-0.5">
                 {formatDateDisplayRu(searchParams.departureDate)}
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Выбрать день</span>
-            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          </div>
-        </button>
+            <ChevronRight className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+          </button>
 
-        {/* Row 4: Сколько человек */}
-        <button
-          onClick={() => {
-            haptic.selection();
-            const next = searchParams.passengers === 4 ? 1 : searchParams.passengers + 1;
-            const updated = { ...searchParams, passengers: next };
-            onChangeParams(updated);
-            onSearch(updated);
-          }}
-          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable"
-        >
-          <div className="flex items-center gap-2.5">
-            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <div>
-              <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                Пассажиры и класс
+          {/* Passengers Count */}
+          <button
+            onClick={() => {
+              haptic.selection();
+              const next = searchParams.passengers === 4 ? 1 : searchParams.passengers + 1;
+              const updated = { ...searchParams, passengers: next };
+              onChangeParams(updated);
+              onSearch(updated);
+            }}
+            className="p-3.5 text-left pressable hover:bg-black/[0.02] dark:hover:bg-white/[0.02] flex items-center justify-between"
+          >
+            <div className="min-w-0 pr-1">
+              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span>ПАССАЖИРЫ</span>
               </div>
-              <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
+              <div className="text-[14px] font-bold text-black dark:text-white truncate mt-0.5">
                 {searchParams.passengers} {searchParams.passengers === 1 ? 'пассажир' : 'пассажира'} • Эконом
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">+1</span>
-            <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          </div>
-        </button>
+            <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+              +1
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Primary Search Button */}
+      {/* Hero Primary Action Button */}
       <button
         onClick={() => {
-          haptic.medium();
+          haptic.heavy();
           onSearch(searchParams);
         }}
         disabled={isLoading}
-        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[15px] tracking-tight transition-colors disabled:opacity-60 pressable shadow-sm"
+        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-extrabold text-[15px] tracking-tight transition-all disabled:opacity-60 pressable shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <div className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>Поиск билетов...</span>
+            <span>Сканируем котировки рынка...</span>
           </div>
         ) : (
-          'Найти билеты'
+          <>
+            <Search className="w-4 h-4 stroke-[2.5]" />
+            <span>СКАНИРОВАТЬ РЫНОК</span>
+          </>
         )}
       </button>
     </div>

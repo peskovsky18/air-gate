@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Compass, Heart } from 'lucide-react';
+import { Search, Bell, Compass, Heart, Plane } from 'lucide-react';
 import { SearchParams, Flight, Subscription, FilterState } from './types';
 import { Header } from './components/Header';
 import { SearchForm } from './components/SearchForm';
@@ -155,12 +155,15 @@ export const App: React.FC = () => {
             <div id="flight-results-anchor" className="scroll-mt-4">
               {isLoading ? (
                 <div className="mx-4 my-6 p-8 ios-card text-center border border-black/[0.08] dark:border-white/[0.12]">
-                  <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-[16px] font-bold text-black dark:text-white">
-                    Ищем билеты...
+                  <div className="relative w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                    <div className="w-12 h-12 border-2 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+                    <Plane className="w-5 h-5 text-blue-600 dark:text-blue-400 absolute stroke-[2.2]" />
+                  </div>
+                  <p className="text-[16px] font-black tracking-tight text-black dark:text-white uppercase">
+                    Сканирование котировок рынка
                   </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    Сравниваем авиакомпании, чартеры и продавцов
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+                    Запрашиваем живые цены у КупиБилет, City.Travel, Trip.com и авиакомпаний...
                   </p>
                 </div>
               ) : hasSearched ? (

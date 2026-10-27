@@ -85,14 +85,14 @@ export const FlightCard: React.FC<FlightCardProps> = ({
         <div className="px-4 pt-3.5 pb-2.5 flex items-start justify-between hairline-b">
           <div className="min-w-0 flex-1 pr-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[17px] font-black text-black dark:text-white tracking-tight">
+              <span className="text-[18px] font-black text-black dark:text-white tracking-tight">
                 {flight.fromCity}
               </span>
-              <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400 stroke-[2.5] flex-shrink-0" />
-              <span className="text-[17px] font-black text-blue-600 dark:text-blue-400 tracking-tight">
+              <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400 stroke-[2.8] flex-shrink-0" />
+              <span className="text-[18px] font-black text-blue-600 dark:text-blue-400 tracking-tight">
                 {flight.toCity}
               </span>
-              <span className="text-xs font-mono font-medium text-zinc-400 dark:text-zinc-500">
+              <span className="text-xs font-mono font-bold text-zinc-400 dark:text-zinc-500">
                 ({flight.fromCode}–{flight.toCode})
               </span>
             </div>
@@ -102,13 +102,15 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               {flight.segments[0]?.flightNumber && (
                 <>
                   <span>•</span>
-                  <span className="font-mono text-zinc-500 dark:text-zinc-400 font-semibold">{flight.segments[0].flightNumber}</span>
+                  <span className="font-mono text-zinc-600 dark:text-zinc-300 font-bold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800">
+                    {flight.segments[0].flightNumber}
+                  </span>
                 </>
               )}
               <span>•</span>
               <span className="font-medium capitalize">{formattedFlightDate}</span>
               {flight.isCheapest && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-300">
                   Лучшая цена
                 </span>
               )}
@@ -140,10 +142,10 @@ export const FlightCard: React.FC<FlightCardProps> = ({
         <div className="p-4 pt-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[26px] font-extrabold text-black dark:text-white tracking-tight tabular leading-none">
+              <div className="text-[28px] font-black text-black dark:text-white tracking-tight tabular leading-none">
                 {flight.departureTime}
               </div>
-              <div className="text-[13px] font-bold text-black dark:text-white mt-1">
+              <div className="text-[13px] font-mono font-black text-blue-600 dark:text-blue-400 mt-1">
                 {flight.fromCode}
               </div>
               <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
@@ -152,7 +154,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             </div>
 
             <div className="flex-1 px-4 flex flex-col items-center">
-              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mb-1 tabular">
+              <span className="text-[11px] font-mono font-bold text-zinc-500 dark:text-zinc-400 mb-1 tabular">
                 {flight.durationTotal}
               </span>
               <div className="w-full flex items-center relative">
@@ -176,10 +178,10 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             </div>
 
             <div className="text-right">
-              <div className="text-[26px] font-extrabold text-black dark:text-white tracking-tight tabular leading-none">
+              <div className="text-[28px] font-black text-black dark:text-white tracking-tight tabular leading-none">
                 {flight.arrivalTime}
               </div>
-              <div className="text-[13px] font-bold text-black dark:text-white mt-1">
+              <div className="text-[13px] font-mono font-black text-blue-600 dark:text-blue-400 mt-1">
                 {flight.toCode}
               </div>
               <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
@@ -206,18 +208,21 @@ export const FlightCard: React.FC<FlightCardProps> = ({
             </div>
           )}
 
-          {/* PRICES COMPARISON TABLE FROM ALL SERVICES */}
-          <div className="mt-3.5 p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 border border-black/[0.05] dark:border-white/[0.08] space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pb-1 hairline-b">
-              <span>Цены на всех сервисах:</span>
-              <span>Стоимость</span>
+          {/* Perforated Boarding Pass Divider */}
+          <div className="ticket-divider my-3" />
+
+          {/* LIVE PRICES COMPARISON MATRIX FROM ALL SERVICES */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest pb-1">
+              <span>КОТИРОВКИ СЕРВИСОВ</span>
+              <span>ЖИВАЯ ЦЕНА</span>
             </div>
 
-            <div className="space-y-1.5 divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+            <div className="space-y-1 divide-y divide-black/[0.04] dark:divide-white/[0.06]">
               {displayedSellers.map((seller) => (
                 <div
                   key={seller.id}
-                  className="pt-1.5 first:pt-0 flex items-center justify-between text-xs"
+                  className="pt-2 first:pt-0 flex items-center justify-between text-xs"
                 >
                   <div className="min-w-0 pr-2">
                     <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
@@ -229,17 +234,17 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                       )}
                     </div>
                     <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                      {seller.baggageIncluded ? 'Багаж 20-23 кг' : 'Без багажа'} • Рейтинг {seller.rating}
+                      {seller.baggageIncluded ? 'С багажом 20 кг' : 'Тариф без багажа'} • Рейтинг {seller.rating}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="text-right">
-                      <div className="font-extrabold text-black dark:text-white tabular text-[13px]">
+                      <div className="font-black text-black dark:text-white tabular text-[13px]">
                         {seller.price.toLocaleString('ru-RU')} ₽
                       </div>
                       {seller.paymentForeign && (
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold tabular">
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold tabular">
                           €{seller.paymentForeign.amount}
                         </div>
                       )}
@@ -247,10 +252,10 @@ export const FlightCard: React.FC<FlightCardProps> = ({
 
                     <button
                       onClick={(e) => handleBookClick(e, seller.bookingUrl)}
-                      className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm pressable"
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm pressable"
                     >
                       <span>Купить</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -263,7 +268,7 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                   haptic.selection();
                   setShowAllSellers(!showAllSellers);
                 }}
-                className="w-full pt-1.5 text-center text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center gap-1 pressable"
+                className="w-full pt-2 text-center text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center gap-1 pressable"
               >
                 <span>{showAllSellers ? 'Скрыть других продавцов' : `Показать еще ${flight.sellers.length - 3} продавцов`}</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showAllSellers ? 'rotate-180' : ''}`} />
@@ -272,22 +277,22 @@ export const FlightCard: React.FC<FlightCardProps> = ({
           </div>
 
           {/* Primary Quick Buy Button */}
-          <div className="mt-3 pt-3 hairline-t flex items-center justify-between gap-3">
+          <div className="mt-3.5 pt-3 hairline-t flex items-center justify-between gap-3">
             <div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Лучшая цена у: <strong className="text-black dark:text-white font-bold">{flight.marketAnalysis.bestSellerName}</strong>
+              <div className="text-[10px] font-mono font-bold tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+                ЛУЧШАЯ ЦЕНА
               </div>
-              <div className="text-[22px] font-black text-black dark:text-white tracking-tight tabular leading-none mt-0.5">
+              <div className="text-[24px] font-black text-black dark:text-white tracking-tight tabular leading-none mt-0.5">
                 {flight.bestPrice.toLocaleString('ru-RU')} ₽
               </div>
             </div>
 
             <button
               onClick={(e) => handleBookClick(e, flight.marketAnalysis.bestSellerUrl)}
-              className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[13px] tracking-tight flex items-center gap-2 shadow-md pressable whitespace-nowrap"
+              className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-[13px] tracking-tight flex items-center gap-2 shadow-lg shadow-blue-600/25 pressable whitespace-nowrap"
             >
               <span>Купить за {flight.bestPrice.toLocaleString('ru-RU')} ₽</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         </div>
