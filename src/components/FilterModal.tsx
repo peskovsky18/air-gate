@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, SlidersHorizontal, Check, Luggage, Clock, Plane } from 'lucide-react';
+import { X } from 'lucide-react';
 import { FilterState } from '../types';
 import { haptic } from '../lib/telegram';
 
@@ -37,100 +37,99 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         />
 
-        {/* Modal Container */}
+        {/* Sheet */}
         <motion.div
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-          className="relative w-full max-w-lg max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 rounded-t-[32px] shadow-2xl border-t border-black/[0.08] dark:border-white/[0.1] overflow-hidden p-6"
+          transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+          className="relative w-full max-w-lg bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[24px] shadow-ios-modal overflow-hidden p-5"
         >
           {/* Drag Handle */}
           <div className="w-full -mt-2 pb-3 flex items-center justify-center">
-            <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <div className="w-9 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
           </div>
 
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">
-                Фильтры поиска
-              </h3>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[18px] font-bold text-black dark:text-white tracking-tight">
+              Фильтры
+            </h3>
             <button
               onClick={() => {
                 haptic.light();
                 onClose();
               }}
-              className="p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 pressable"
+              className="p-1.5 rounded-full bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500 pressable"
+              aria-label="Закрыть"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Filters Body */}
-          <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
-            {/* Quick toggles */}
-            <div className="space-y-2">
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-black/[0.04] dark:border-white/[0.06] cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <Luggage className="w-4 h-4 text-zinc-500" />
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      Только с включенным багажом
-                    </div>
-                    <div className="text-[11px] text-zinc-400">
-                      Исключить тарифы только с ручной кладью
-                    </div>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={filters.baggageOnly}
-                  onChange={e => {
+          <div className="space-y-4">
+            {/* Grouped Inset Switches */}
+            <div className="ios-card overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between hairline-b">
+                <span className="text-[15px] font-medium text-black dark:text-white tracking-tight">
+                  Только с багажом
+                </span>
+                <button
+                  onClick={() => {
                     haptic.selection();
-                    onChangeFilters({ ...filters, baggageOnly: e.target.checked });
+                    onChangeFilters({ ...filters, baggageOnly: !filters.baggageOnly });
                   }}
-                  className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500"
-                />
-              </label>
+                  className={`w-12 h-7 rounded-full transition-colors relative pressable ${
+                    filters.baggageOnly ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                  aria-label="Только с багажом"
+                >
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                    className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-1 ${
+                      filters.baggageOnly ? 'right-1' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
 
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-black/[0.04] dark:border-white/[0.06] cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <Plane className="w-4 h-4 text-zinc-500" />
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      Только прямые рейсы
-                    </div>
-                    <div className="text-[11px] text-zinc-400">
-                      Без пересадок и стыковок
-                    </div>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={filters.directOnly}
-                  onChange={e => {
+              <div className="px-4 py-3 flex items-center justify-between">
+                <span className="text-[15px] font-medium text-black dark:text-white tracking-tight">
+                  Только прямые рейсы
+                </span>
+                <button
+                  onClick={() => {
                     haptic.selection();
-                    onChangeFilters({ ...filters, directOnly: e.target.checked });
+                    onChangeFilters({ ...filters, directOnly: !filters.directOnly });
                   }}
-                  className="w-5 h-5 rounded-lg text-blue-600 focus:ring-blue-500"
-                />
-              </label>
+                  className={`w-12 h-7 rounded-full transition-colors relative pressable ${
+                    filters.directOnly ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                  aria-label="Только прямые рейсы"
+                >
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                    className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-1 ${
+                      filters.directOnly ? 'right-1' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
-            {/* Time of Day */}
+            {/* Time of Day Segmented Control */}
             <div>
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+              <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide mb-2 px-1">
                 Время вылета
-              </span>
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              </div>
+              <div className="p-0.5 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 flex items-center">
                 {[
                   { id: 'all', label: 'Любое' },
-                  { id: 'morning', label: 'Утро (06-12)' },
-                  { id: 'day', label: 'День (12-18)' },
-                  { id: 'evening', label: 'Вечер (18-00)' },
+                  { id: 'morning', label: 'Утро' },
+                  { id: 'day', label: 'День' },
+                  { id: 'evening', label: 'Вечер' },
                 ].map(item => {
                   const isSelected = filters.timeOfDay === item.id;
                   return (
@@ -140,10 +139,10 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         haptic.selection();
                         onChangeFilters({ ...filters, timeOfDay: item.id as any });
                       }}
-                      className={`p-2.5 rounded-xl text-xs font-semibold text-center border transition-all pressable ${
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-md text-center transition-colors pressable ${
                         isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-transparent'
+                          ? 'bg-white dark:bg-zinc-700 text-black dark:text-white shadow-sm'
+                          : 'text-zinc-500'
                       }`}
                     >
                       {item.label}
@@ -152,28 +151,28 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 })}
               </div>
             </div>
-          </div>
 
-          {/* Footer Actions */}
-          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
-            <button
-              onClick={() => {
-                haptic.light();
-                onReset();
-              }}
-              className="py-3 px-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs pressable"
-            >
-              Сбросить
-            </button>
-            <button
-              onClick={() => {
-                haptic.medium();
-                onClose();
-              }}
-              className="flex-1 py-3 px-4 rounded-2xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20 pressable"
-            >
-              Применить фильтры
-            </button>
+            {/* Buttons */}
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  haptic.light();
+                  onReset();
+                }}
+                className="py-3 px-4 rounded-xl ios-card text-black dark:text-white text-xs font-semibold pressable"
+              >
+                Сбросить
+              </button>
+              <button
+                onClick={() => {
+                  haptic.medium();
+                  onClose();
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold pressable"
+              >
+                Применить
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>

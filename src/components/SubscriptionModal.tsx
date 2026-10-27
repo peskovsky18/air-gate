@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, Check, Sparkles, TrendingDown, Shield } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { Subscription } from '../types';
 import { storage } from '../lib/storage';
 import { haptic } from '../lib/telegram';
@@ -32,7 +32,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     Math.round((currentBestPrice * 0.85) / 100) * 100
   );
   const [flexibleDates, setFlexibleDates] = useState<boolean>(true);
-  const [instantAlerts, setInstantAlerts] = useState<boolean>(true);
   const [isCreated, setIsCreated] = useState<boolean>(false);
 
   if (!isOpen) return null;
@@ -59,7 +58,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       onSubscriptionCreated(newSub);
       setIsCreated(false);
       onClose();
-    }, 1200);
+    }, 1000);
   };
 
   return (
@@ -78,17 +77,17 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         />
 
-        {/* Modal Container */}
+        {/* Sheet */}
         <motion.div
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-          className="relative w-full max-w-lg flex flex-col bg-white dark:bg-zinc-900 rounded-t-[32px] shadow-2xl border-t border-black/[0.08] dark:border-white/[0.1] overflow-hidden p-6"
+          transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+          className="relative w-full max-w-lg bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[24px] shadow-ios-modal overflow-hidden p-5"
         >
           {/* Drag Handle */}
           <div className="w-full -mt-2 pb-3 flex items-center justify-center">
-            <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <div className="w-9 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
           </div>
 
           {/* Close button */}
@@ -97,62 +96,45 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               haptic.light();
               onClose();
             }}
-            className="absolute top-5 right-5 p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 pressable"
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500 pressable"
+            aria-label="Закрыть"
           >
             <X className="w-4 h-4" />
           </button>
 
           {isCreated ? (
-            /* Success Feedback Animation */
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="py-12 flex flex-col items-center justify-center text-center"
-            >
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
-                <Check className="w-8 h-8 stroke-[3]" />
+            <div className="py-10 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-3">
+                <Check className="w-6 h-6 stroke-[2.5]" />
               </div>
-              <h3 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-50">
-                Подписка активирована!
+              <h3 className="text-[17px] font-bold text-black dark:text-white tracking-tight">
+                Подписка сохранена
               </h3>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-xs">
-                Бот пришлет мгновенное пуш-уведомление в Telegram, как только цена опустится до {targetPrice.toLocaleString('ru-RU')} ₽.
+              <p className="text-xs text-zinc-500 mt-1 max-w-xs">
+                Бот пришлет уведомление в Telegram, когда цена опустится до {targetPrice.toLocaleString('ru-RU')} ₽.
               </p>
-            </motion.div>
+            </div>
           ) : (
             <>
               {/* Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Bell className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                    Следить за ценой билета
-                  </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {fromCity} ({fromCode}) → {toCity} ({toCode})
-                  </p>
-                </div>
+              <div className="mb-4">
+                <h3 className="text-[18px] font-bold text-black dark:text-white tracking-tight">
+                  Следить за ценой
+                </h3>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {fromCity} ({fromCode}) → {toCity} ({toCode})
+                </p>
               </div>
 
-              {/* Target Price Configuration */}
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-black/[0.04] dark:border-white/[0.06] mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                    Желаемая целевая цена:
-                  </span>
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <TrendingDown className="w-3.5 h-3.5" />
-                    Экономия {(currentBestPrice - targetPrice).toLocaleString('ru-RU')} ₽
-                  </span>
+              {/* Target Price Card */}
+              <div className="ios-card p-4 mb-3">
+                <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">
+                  Желаемая стоимость
                 </div>
-
-                <div className="text-3xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight my-2">
+                <div className="text-[28px] font-bold text-black dark:text-white tracking-tight tabular my-1">
                   {targetPrice.toLocaleString('ru-RU')} ₽
                 </div>
 
-                {/* Range Slider */}
                 <input
                   type="range"
                   min={minPrice}
@@ -163,68 +145,53 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     haptic.selection();
                     setTargetPrice(Number(e.target.value));
                   }}
-                  className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600 mt-2"
                 />
 
-                <div className="flex justify-between text-[11px] text-zinc-400 mt-2 font-mono">
-                  <span>Мин: {minPrice.toLocaleString('ru-RU')} ₽</span>
+                <div className="flex justify-between text-[11px] text-zinc-400 mt-2 tabular">
+                  <span>{minPrice.toLocaleString('ru-RU')} ₽</span>
                   <span>Сейчас: {currentBestPrice.toLocaleString('ru-RU')} ₽</span>
                 </div>
               </div>
 
-              {/* Flexible Dates & Telegram Push Settings */}
-              <div className="space-y-3 mb-6">
-                <label className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-black/[0.04] dark:border-white/[0.06] cursor-pointer">
-                  <div>
-                    <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                      Мониторить гибкие даты (±3 дня / весь месяц)
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      Уведомить о суперцене на соседние дни вылета
-                    </div>
+              {/* Flexible dates toggle */}
+              <div className="ios-card px-4 py-3 flex items-center justify-between mb-5">
+                <div>
+                  <div className="text-[14px] font-medium text-black dark:text-white tracking-tight">
+                    Гибкие даты (±3 дня)
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={flexibleDates}
-                    onChange={e => {
-                      haptic.selection();
-                      setFlexibleDates(e.target.checked);
-                    }}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
+                  <div className="text-[11px] text-zinc-400">
+                    Отслеживать соседние дни вылета
+                  </div>
+                </div>
 
-                <label className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-black/[0.04] dark:border-white/[0.06] cursor-pointer">
-                  <div>
-                    <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                      <span>Мгновенный пуш в Telegram-боте</span>
-                      <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      При снижении цены бот сразу пришлет ссылку на бронь
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={instantAlerts}
-                    onChange={e => {
-                      haptic.selection();
-                      setInstantAlerts(e.target.checked);
-                    }}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                <button
+                  onClick={() => {
+                    haptic.selection();
+                    setFlexibleDates(!flexibleDates);
+                  }}
+                  className={`w-12 h-7 rounded-full transition-colors relative pressable ${
+                    flexibleDates ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                  aria-label="Гибкие даты"
+                >
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                    className={`w-5 h-5 rounded-full bg-white shadow-sm absolute top-1 ${
+                      flexibleDates ? 'right-1' : 'left-1'
+                    }`}
                   />
-                </label>
+                </button>
               </div>
 
-              {/* Save Button */}
-              <motion.button
-                whileTap={{ scale: 0.98 }}
+              {/* Submit Button */}
+              <button
                 onClick={handleSave}
-                className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 pressable"
+                className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[15px] tracking-tight transition-colors pressable"
               >
-                <Bell className="w-4 h-4" />
-                <span>Создать радар-подписку</span>
-              </motion.button>
+                Сохранить подписку
+              </button>
             </>
           )}
         </motion.div>

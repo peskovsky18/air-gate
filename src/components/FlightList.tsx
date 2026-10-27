@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, Bell, Check, TrendingDown, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, Bell } from 'lucide-react';
 import { Flight, FilterState } from '../types';
 import { FlightCard } from './FlightCard';
 import { haptic } from '../lib/telegram';
@@ -24,7 +24,6 @@ export const FlightList: React.FC<FlightListProps> = ({
 }) => {
   const [sortTab, setSortTab] = useState<'cheapest' | 'fastest' | 'optimal'>('cheapest');
 
-  // Filter and sort flights
   const filteredFlights = useMemo(() => {
     let result = [...flights];
 
@@ -47,7 +46,6 @@ export const FlightList: React.FC<FlightListProps> = ({
       });
     }
 
-    // Sort
     if (sortTab === 'cheapest') {
       result.sort((a, b) => a.bestPrice - b.bestPrice);
     } else if (sortTab === 'fastest') {
@@ -71,14 +69,13 @@ export const FlightList: React.FC<FlightListProps> = ({
 
   return (
     <div className="relative pb-24">
-      {/* Sorting Tabs & Filters Bar */}
+      {/* Segmented Control Header */}
       <div className="px-4 py-2 flex items-center justify-between gap-2">
-        {/* Segmented Control */}
-        <div className="flex-1 p-1 rounded-2xl bg-zinc-200/70 dark:bg-zinc-800/80 flex items-center relative border border-black/[0.04] dark:border-white/[0.06]">
+        <div className="flex-1 p-0.5 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 flex items-center relative">
           {[
-            { id: 'cheapest', label: 'Дешевый' },
-            { id: 'fastest', label: 'Быстрый' },
-            { id: 'optimal', label: 'Оптимальный' },
+            { id: 'cheapest', label: 'Дешевые' },
+            { id: 'fastest', label: 'Быстрые' },
+            { id: 'optimal', label: 'Оптимальные' },
           ].map((tab) => {
             const isActive = sortTab === tab.id;
             return (
@@ -88,17 +85,17 @@ export const FlightList: React.FC<FlightListProps> = ({
                   haptic.selection();
                   setSortTab(tab.id as any);
                 }}
-                className={`relative flex-1 py-1.5 text-xs font-semibold rounded-xl text-center transition-colors pressable z-10 ${
+                className={`relative flex-1 py-1.5 text-[13px] font-medium rounded-md text-center transition-colors pressable z-10 ${
                   isActive
-                    ? 'text-zinc-900 dark:text-zinc-50'
+                    ? 'text-black dark:text-white'
                     : 'text-zinc-500 dark:text-zinc-400'
                 }`}
               >
                 {isActive && (
                   <motion.div
-                    layoutId="activeTabIndicator"
-                    transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-                    className="absolute inset-0 bg-white dark:bg-zinc-700 rounded-xl shadow-sm -z-10"
+                    layoutId="activeSortIndicator"
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                    className="absolute inset-0 bg-white dark:bg-zinc-700 rounded-md shadow-sm -z-10"
                   />
                 )}
                 {tab.label}
@@ -107,18 +104,18 @@ export const FlightList: React.FC<FlightListProps> = ({
           })}
         </div>
 
-        {/* Filter Button */}
+        {/* Filter Trigger Button */}
         <button
           onClick={() => {
             haptic.selection();
             onOpenFilter();
           }}
-          className="relative p-2.5 rounded-2xl bg-zinc-200/70 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-black/[0.04] dark:border-white/[0.06] pressable"
-          title="Фильтры"
+          className="relative p-2 rounded-lg bg-zinc-200/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 pressable"
+          aria-label="Фильтры"
         >
           <SlidersHorizontal className="w-4 h-4" />
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
               {activeFiltersCount}
             </span>
           )}
@@ -127,46 +124,41 @@ export const FlightList: React.FC<FlightListProps> = ({
 
       {/* Flight Cards List */}
       {filteredFlights.length === 0 ? (
-        <div className="mx-4 my-8 p-8 rounded-3xl glass-card text-center">
-          <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-            По выбранным фильтрам рейсов не найдено
+        <div className="mx-4 my-8 p-8 ios-card text-center">
+          <p className="text-[15px] font-medium text-black dark:text-white">
+            По выбранным фильтрам билетов не найдено
           </p>
           <p className="text-xs text-zinc-400 mt-1">
-            Попробуйте сбросить фильтр багажа или пересадок
+            Попробуйте сбросить фильтры
           </p>
         </div>
       ) : (
         <div className="mt-1">
-          <AnimatePresence>
-            {filteredFlights.map((flight) => (
-              <FlightCard
-                key={flight.id}
-                flight={flight}
-                isFavorite={favorites.includes(flight.id)}
-                onToggleFavorite={onToggleFavorite}
-                onTrackFlight={() => onOpenSubscriptionModal(flight)}
-              />
-            ))}
-          </AnimatePresence>
+          {filteredFlights.map((flight) => (
+            <FlightCard
+              key={flight.id}
+              flight={flight}
+              isFavorite={favorites.includes(flight.id)}
+              onToggleFavorite={onToggleFavorite}
+              onTrackFlight={() => onOpenSubscriptionModal(flight)}
+            />
+          ))}
         </div>
       )}
 
-      {/* Floating Price Radar Button */}
+      {/* Clean Floating Price Alert Pill */}
       {bestFlight && (
         <div className="fixed bottom-20 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none">
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+          <button
             onClick={() => {
               haptic.medium();
               onOpenSubscriptionModal(bestFlight);
             }}
-            className="pointer-events-auto py-2.5 px-5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-float flex items-center gap-2 border border-blue-400/40 backdrop-blur-md pressable"
+            className="pointer-events-auto py-2.5 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[13px] shadow-lg flex items-center gap-2 pressable"
           >
-            <Bell className="w-4 h-4" />
-            <span>Следить за ценой (от {bestFlight.bestPrice.toLocaleString('ru-RU')} ₽)</span>
-          </motion.button>
+            <Bell className="w-4 h-4 stroke-[2]" />
+            <span>Следить за ценой</span>
+          </button>
         </div>
       )}
     </div>

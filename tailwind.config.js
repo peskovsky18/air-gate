@@ -8,22 +8,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        tg: {
-          bg: 'var(--tg-theme-bg-color, #ffffff)',
-          text: 'var(--tg-theme-text-color, #000000)',
-          hint: 'var(--tg-theme-hint-color, #8e8e93)',
-          link: 'var(--tg-theme-link-color, #007aff)',
-          button: 'var(--tg-theme-button-color, #007aff)',
-          buttonText: 'var(--tg-theme-button-text-color, #ffffff)',
-          secondaryBg: 'var(--tg-theme-secondary-bg-color, #f2f2f7)',
-          headerBg: 'var(--tg-theme-header-bg-color, #ffffff)',
-          accent: '#007aff',
-        },
-        surface: {
-          light: '#ffffff',
-          dark: '#121214',
-          cardLight: '#f8f9fa',
-          cardDark: '#1c1c1e',
+        ios: {
+          bg: '#F2F2F7',
+          darkBg: '#000000',
+          card: '#FFFFFF',
+          darkCard: '#1C1C1E',
+          cardHover: '#F7F7F9',
+          darkCardHover: '#2C2C2E',
+          secondaryBg: '#E5E5EA',
+          darkSecondaryBg: '#2C2C2E',
+          blue: '#0071E3',
+          darkBlue: '#0A84FF',
+          green: '#34C759',
+          orange: '#FF9500',
+          red: '#FF3B30',
+          label: '#000000',
+          darkLabel: '#FFFFFF',
+          secondaryLabel: '#8E8E93',
+          tertiaryLabel: '#C7C7CC',
+          separator: 'rgba(60, 60, 67, 0.12)',
+          darkSeparator: 'rgba(84, 84, 88, 0.36)',
         }
       },
       fontFamily: {
@@ -32,21 +36,21 @@ export default {
           'BlinkMacSystemFont',
           '"SF Pro Display"',
           '"SF Pro Text"',
-          '"Segoe UI"',
-          'Roboto',
+          '"Helvetica Neue"',
           'Helvetica',
           'Arial',
           'sans-serif'
         ],
       },
-      boxShadow: {
-        'subtle': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.03)',
-        'sheet': '0 -10px 40px rgba(0, 0, 0, 0.15)',
-        'float': '0 12px 36px -4px rgba(0, 0, 0, 0.16)',
+      letterSpacing: {
+        tighter: '-0.03em',
+        tight: '-0.015em',
+        normal: '0',
+        wide: '0.015em',
       },
-      borderRadius: {
-        '3xl': '24px',
-        '4xl': '32px',
+      boxShadow: {
+        'ios-subtle': '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
+        'ios-modal': '0 12px 32px rgba(0,0,0,0.18)',
       }
     },
   },
