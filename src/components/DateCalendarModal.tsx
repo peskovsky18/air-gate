@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, X } from 'lucide-react';
-import { DatePriceHeatmap } from '../types';
-import { generatePriceHeatmap } from '../services/flightAggregator';
+import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon } from 'lucide-react';
+import { parseYMD, formatYMD, getTodayYMD, formatMonthYearRu } from '../lib/dateUtils';
 import { haptic } from '../lib/telegram';
 
 interface DateCalendarModalProps {
@@ -20,9 +19,68 @@ export const DateCalendarModal: React.FC<DateCalendarModalProps> = ({
   onSelectDate,
   basePrice = 14500,
 }) => {
-  const heatmapData: DatePriceHeatmap[] = generatePriceHeatmap(selectedDate, basePrice);
+  const todayYMD = getTodayYMD();
+  const parsedSelected = parseYMD(selectedDate || todayYMD);
+
+  const [viewYear, setViewYear] = useState<number>(parsedSelected.year);
+  const [viewMonth, setViewMonth] = useState<number>(parsedSelected.month); // 0 - 11
+
+  // Synchronize when modal opens or selectedDate changes
+  useEffect(() => {
+    if (isOpen) {
+      const p = parseYMD(selectedDate || todayYMD);
+      setViewYear(p.year);
+      setViewMonth(p.month);
+    }
+  }, [isOpen, selectedDate]);
 
   if (!isOpen) return null;
+
+  const today = parseYMD(todayYMD);
+  const isCurrentMonthPastOrPresent =
+    viewYear < today.year || (viewYear === today.year && viewMonth <= today.month);
+
+  const handlePrevMonth = () => {
+    haptic.selection();
+    if (viewMonth === 0) {
+      setViewYear(viewYear - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    haptic.selection();
+    if (viewMonth === 11) {
+      setViewYear(viewYear + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  // Quick preset dates
+  const handleQuickPreset = (daysOffset: number) => {
+    haptic.selection();
+    const d = new Date(today.year, today.month, today.day);
+    d.setDate(d.getDate() + daysOffset);
+    const dateStr = formatYMD(d.getFullYear(), d.getMonth(), d.getDate());
+    onSelectDate(dateStr);
+    onClose();
+  };
+
+  // Days in selected view month
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  // Monday start offset: 0 for Monday, 6 for Sunday
+  const firstDayWeekIndex = new Date(viewYear, viewMonth, 1).getDay();
+  const startOffset = (firstDayWeekIndex + 6) % 7;
+
+  const dayLabels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+  // Current day of week for weekend preset
+  const todayDow = new Date(today.year, today.month, today.day).getDay();
+  const daysUntilSaturday = (6 - todayDow + 7) % 7 || 7;
 
   return (
     <AnimatePresence>
@@ -37,16 +95,16 @@ export const DateCalendarModal: React.FC<DateCalendarModalProps> = ({
             haptic.light();
             onClose();
           }}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         />
 
-        {/* Sheet */}
+        {/* Modal Container */}
         <motion.div
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
-          className="relative w-full max-w-lg bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[24px] shadow-ios-modal overflow-hidden p-5"
+          className="relative w-full max-w-lg bg-[#F2F2F7] dark:bg-[#1C1C1E] rounded-t-[28px] shadow-2xl overflow-hidden p-5 max-h-[90vh] flex flex-col"
         >
           {/* Drag Handle */}
           <div className="w-full -mt-2 pb-3 flex items-center justify-center">
@@ -54,13 +112,13 @@ export const DateCalendarModal: React.FC<DateCalendarModalProps> = ({
           </div>
 
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between pb-2 hairline-b">
             <div>
               <h3 className="text-[18px] font-bold text-black dark:text-white tracking-tight">
-                Календарь цен
+                Выберите дату вылета
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Стоимость билетов по дням
+                Календарь цен на все дни месяца
               </p>
             </div>
             <button
@@ -75,42 +133,130 @@ export const DateCalendarModal: React.FC<DateCalendarModalProps> = ({
             </button>
           </div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-4 gap-2 py-2">
-            {heatmapData.map((item) => {
-              const isSelected = item.date === selectedDate;
-              const isCheapest = item.isLowest;
+          {/* Quick Presets */}
+          <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar hairline-b">
+            <span className="text-[11px] text-zinc-400 pl-0.5 whitespace-nowrap">Быстро:</span>
+            {[
+              { label: 'Завтра', days: 1 },
+              { label: 'Через 3 дня', days: 3 },
+              { label: 'Через неделю', days: 7 },
+              { label: 'В выходные', days: daysUntilSaturday },
+              { label: 'Через 2 недели', days: 14 },
+              { label: 'Через месяц', days: 30 },
+            ].map((p) => (
+              <button
+                key={p.label}
+                onClick={() => handleQuickPreset(p.days)}
+                className="px-2.5 py-1 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 text-xs font-medium text-black dark:text-white whitespace-nowrap pressable"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Month Navigation */}
+          <div className="flex items-center justify-between py-3">
+            <button
+              onClick={handlePrevMonth}
+              disabled={isCurrentMonthPastOrPresent}
+              className="p-2 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 text-black dark:text-white pressable disabled:opacity-20"
+              aria-label="Предыдущий месяц"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <span className="text-[16px] font-bold text-black dark:text-white capitalize tracking-tight">
+              {formatMonthYearRu(viewYear, viewMonth)}
+            </span>
+
+            <button
+              onClick={handleNextMonth}
+              className="p-2 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 text-black dark:text-white pressable"
+              aria-label="Следующий месяц"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Weekday Labels */}
+          <div className="grid grid-cols-7 gap-1 text-center mb-1">
+            {dayLabels.map((label, idx) => (
+              <span
+                key={label}
+                className={`text-[11px] font-semibold uppercase ${
+                  idx >= 5 ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400'
+                }`}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1.5 flex-1 overflow-y-auto py-1">
+            {/* Blank offset cells */}
+            {Array.from({ length: startOffset }).map((_, i) => (
+              <div key={`blank-${i}`} className="h-14" />
+            ))}
+
+            {/* Days of current month */}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dateStr = formatYMD(viewYear, viewMonth, day);
+
+              // Check if date is in past
+              const isPast =
+                viewYear < today.year ||
+                (viewYear === today.year && viewMonth < today.month) ||
+                (viewYear === today.year && viewMonth === today.month && day < today.day);
+
+              const isSelected = dateStr === selectedDate;
+              const isToday =
+                viewYear === today.year && viewMonth === today.month && day === today.day;
+
+              // Generate estimated price for day
+              const dayDow = new Date(viewYear, viewMonth, day).getDay();
+              const isWeekend = dayDow === 0 || dayDow === 6;
+              const seed = (day * 7 + viewMonth * 13) % 11;
+              const multiplier = 0.82 + (seed / 10) * 0.35 + (isWeekend ? 0.18 : 0);
+              const dayPrice = Math.round((basePrice * multiplier) / 100) * 100;
+              const isCheapest = dayPrice < basePrice * 0.9;
 
               return (
                 <button
-                  key={item.date}
-                  disabled={item.isPast}
+                  key={dateStr}
+                  disabled={isPast}
                   onClick={() => {
                     haptic.selection();
-                    onSelectDate(item.date);
+                    onSelectDate(dateStr);
                     onClose();
                   }}
-                  className={`p-2.5 rounded-2xl flex flex-col items-center justify-center text-center transition-colors pressable ${
+                  className={`h-14 rounded-xl flex flex-col items-center justify-center transition-all pressable ${
                     isSelected
-                      ? 'bg-blue-600 text-white'
-                      : 'ios-card text-black dark:text-white'
-                  } ${item.isPast ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      ? 'bg-blue-600 text-white font-bold shadow-md ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900'
+                      : isPast
+                      ? 'opacity-20 cursor-not-allowed text-zinc-400'
+                      : isToday
+                      ? 'bg-blue-50 dark:bg-blue-950/40 border border-blue-500/30 text-blue-600 dark:text-blue-400'
+                      : 'hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-black dark:text-white'
+                  }`}
                 >
-                  <span className={`text-[10px] font-medium uppercase ${isSelected ? 'text-blue-100' : 'text-zinc-400'}`}>
-                    {item.dayOfWeek}
+                  <span className={`text-[15px] tabular leading-none ${isSelected ? 'font-bold' : 'font-medium'}`}>
+                    {day}
                   </span>
-                  <span className="text-[17px] font-bold tabular my-0.5">
-                    {item.dayOfMonth}
-                  </span>
-                  <span className={`text-[11px] tabular ${
-                    isSelected
-                      ? 'text-white'
-                      : isCheapest
-                      ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
-                      : 'text-zinc-500'
-                  }`}>
-                    {item.price.toLocaleString('ru-RU')} ₽
-                  </span>
+                  {!isPast && (
+                    <span
+                      className={`text-[9px] mt-1 tabular leading-none ${
+                        isSelected
+                          ? 'text-white/90 font-semibold'
+                          : isCheapest
+                          ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                          : 'text-zinc-400'
+                      }`}
+                    >
+                      {Math.round(dayPrice / 1000)}к
+                    </span>
+                  )}
                 </button>
               );
             })}

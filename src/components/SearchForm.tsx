@@ -1,12 +1,13 @@
 import React from 'react';
 import { ArrowUpDown, Calendar, Users, SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { SearchParams } from '../types';
+import { formatDateDisplayRu, addDaysToYMD, getTodayYMD } from '../lib/dateUtils';
 import { haptic } from '../lib/telegram';
 
 interface SearchFormProps {
   searchParams: SearchParams;
   onChangeParams: (params: SearchParams) => void;
-  onSearch: () => void;
+  onSearch: (params?: SearchParams) => void;
   onOpenAirportModal: (mode: 'from' | 'to') => void;
   onOpenCalendarModal: () => void;
   onOpenFilterModal: () => void;
@@ -26,18 +27,29 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     e.stopPropagation();
     haptic.medium();
     if (searchParams.toCode === 'ANY') return;
-    onChangeParams({
+    const updated: SearchParams = {
       ...searchParams,
       fromCode: searchParams.toCode,
       fromCity: searchParams.toCity,
       toCode: searchParams.fromCode,
       toCity: searchParams.fromCity,
-    });
+    };
+    onChangeParams(updated);
+    onSearch(updated);
+  };
+
+  const handleQuickDate = (daysAhead: number) => {
+    haptic.selection();
+    const todayStr = getTodayYMD();
+    const newDate = addDaysToYMD(todayStr, daysAhead);
+    const updated: SearchParams = { ...searchParams, departureDate: newDate };
+    onChangeParams(updated);
+    onSearch(updated);
   };
 
   return (
     <div className="p-4 space-y-3">
-      {/* Grouped Inset Card: Route & Parameters */}
+      {/* Route & Parameters Card */}
       <div className="ios-card overflow-hidden">
         {/* Row 1: Откуда */}
         <button
@@ -45,7 +57,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             haptic.selection();
             onOpenAirportModal('from');
           }}
-          className="w-full px-4 py-3 flex items-center justify-between text-left pressable hairline-b"
+          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div>
             <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
@@ -81,7 +93,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             haptic.selection();
             onOpenAirportModal('to');
           }}
-          className="w-full px-4 py-3 flex items-center justify-between text-left pressable hairline-b"
+          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div>
             <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
@@ -99,54 +111,78 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           </div>
         </button>
 
-        {/* Row 3: Дата */}
+        {/* Row 3: Дата вылета */}
         <button
           onClick={() => {
             haptic.selection();
             onOpenCalendarModal();
           }}
-          className="w-full px-4 py-3 flex items-center justify-between text-left pressable hairline-b"
+          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable hairline-b"
         >
           <div className="flex items-center gap-2.5">
             <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <div>
               <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
-                Когда
+                Дата вылета
               </div>
-              <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
-                {new Date(searchParams.departureDate).toLocaleDateString('ru-RU', {
-                  day: 'numeric',
-                  month: 'long',
-                  weekday: 'short'
-                })}
+              <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5 capitalize">
+                {formatDateDisplayRu(searchParams.departureDate)}
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Выбрать день</span>
+            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+          </div>
         </button>
 
         {/* Row 4: Сколько человек */}
         <button
           onClick={() => {
             haptic.selection();
-            const next = searchParams.passengers === 3 ? 1 : searchParams.passengers + 1;
-            onChangeParams({ ...searchParams, passengers: next });
+            const next = searchParams.passengers === 4 ? 1 : searchParams.passengers + 1;
+            const updated = { ...searchParams, passengers: next };
+            onChangeParams(updated);
+            onSearch(updated);
           }}
-          className="w-full px-4 py-3 flex items-center justify-between text-left pressable"
+          className="w-full px-4 py-3.5 flex items-center justify-between text-left pressable"
         >
           <div className="flex items-center gap-2.5">
             <Users className="w-4 h-4 text-blue-600 dark:text-blue-500" />
             <div>
               <div className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
-                Сколько человек
+                Пассажиры и класс
               </div>
               <div className="text-[15px] font-semibold text-black dark:text-white tracking-tight mt-0.5">
                 {searchParams.passengers} {searchParams.passengers === 1 ? 'пассажир' : 'пассажира'} • Эконом
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-zinc-400 font-medium">Нажмите +1</span>
+            <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+          </div>
         </button>
+      </div>
+
+      {/* Quick Date Presets Row */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <span className="text-[11px] text-zinc-400 pl-1 whitespace-nowrap">Быстро:</span>
+        {[
+          { label: 'Завтра', days: 1 },
+          { label: 'Через 3 дня', days: 3 },
+          { label: 'Через неделю', days: 7 },
+          { label: 'Через 2 недели', days: 14 },
+          { label: 'Через месяц', days: 30 },
+        ].map(item => (
+          <button
+            key={item.label}
+            onClick={() => handleQuickDate(item.days)}
+            className="px-2.5 py-1 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 text-xs font-medium text-black dark:text-white whitespace-nowrap pressable"
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {/* Quick Filters Row */}
@@ -165,7 +201,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         <button
           onClick={() => {
             haptic.selection();
-            onChangeParams({ ...searchParams, flexibleDates: !searchParams.flexibleDates });
+            const updated = { ...searchParams, flexibleDates: !searchParams.flexibleDates };
+            onChangeParams(updated);
+            onSearch(updated);
           }}
           className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors pressable ${
             searchParams.flexibleDates
@@ -179,7 +217,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         <button
           onClick={() => {
             haptic.selection();
-            onChangeParams({ ...searchParams, includeNearbyAirports: !searchParams.includeNearbyAirports });
+            const updated = { ...searchParams, includeNearbyAirports: !searchParams.includeNearbyAirports };
+            onChangeParams(updated);
+            onSearch(updated);
           }}
           className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors pressable ${
             searchParams.includeNearbyAirports
@@ -191,19 +231,19 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         </button>
       </div>
 
-      {/* Primary Action Button */}
+      {/* Primary Search Button */}
       <button
         onClick={() => {
           haptic.medium();
-          onSearch();
+          onSearch(searchParams);
         }}
         disabled={isLoading}
-        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[15px] tracking-tight transition-colors disabled:opacity-60 pressable"
+        className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[15px] tracking-tight transition-colors disabled:opacity-60 pressable shadow-sm"
       >
         {isLoading ? (
           <div className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>Анализ тарифов...</span>
+            <span>Сканирование 48 источников...</span>
           </div>
         ) : (
           'Найти билеты'

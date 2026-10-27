@@ -13,16 +13,20 @@ import { AnywhereExplore } from './components/AnywhereExplore';
 import { searchFlights } from './services/flightAggregator';
 import { storage } from './lib/storage';
 import { initTelegramApp, getTelegramWebApp, haptic } from './lib/telegram';
+import { addDaysToYMD, getTodayYMD } from './lib/dateUtils';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'search' | 'subscriptions' | 'explore' | 'favorites'>('search');
+
+  const todayStr = getTodayYMD();
+  const initialDeparture = addDaysToYMD(todayStr, 5);
 
   const [searchParams, setSearchParams] = useState<SearchParams>({
     fromCode: 'RIX',
     fromCity: 'Рига',
     toCode: 'TLL',
     toCity: 'Таллин',
-    departureDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+    departureDate: initialDeparture,
     isRoundTrip: false,
     passengers: 1,
     cabinClass: 'economy',
@@ -52,11 +56,36 @@ export const App: React.FC = () => {
     timeOfDay: 'all',
   });
 
+  const handleSearch = async (overrideParams?: SearchParams) => {
+    const paramsToRun = overrideParams || searchParams;
+    setIsLoading(true);
+    setHasSearched(true);
+    try {
+      const results = await searchFlights(paramsToRun);
+      setFlights(results);
+    } catch (e) {
+      console.error('Search error:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     initTelegramApp();
     setSubscriptions(storage.getSubscriptions());
     setFavorites(storage.getFavorites());
-    handleSearch();
+    handleSearch({
+      fromCode: 'RIX',
+      fromCity: 'Рига',
+      toCode: 'TLL',
+      toCity: 'Таллин',
+      departureDate: initialDeparture,
+      isRoundTrip: false,
+      passengers: 1,
+      cabinClass: 'economy',
+      flexibleDates: true,
+      includeNearbyAirports: true,
+    });
   }, []);
 
   useEffect(() => {
@@ -77,19 +106,6 @@ export const App: React.FC = () => {
       tg.BackButton.hide();
     }
   }, [activeTab]);
-
-  const handleSearch = async () => {
-    setIsLoading(true);
-    setHasSearched(true);
-    try {
-      const results = await searchFlights(searchParams);
-      setFlights(results);
-    } catch (e) {
-      console.error('Search error:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleToggleFavorite = (flightId: string) => {
     storage.toggleFavorite(flightId);
@@ -118,7 +134,7 @@ export const App: React.FC = () => {
             <SearchForm
               searchParams={searchParams}
               onChangeParams={setSearchParams}
-              onSearch={handleSearch}
+              onSearch={(params) => handleSearch(params || searchParams)}
               onOpenAirportModal={(mode) => {
                 setAirportModalMode(mode);
                 setIsAirportModalOpen(true);
@@ -153,15 +169,14 @@ export const App: React.FC = () => {
           <AnywhereExplore
             fromCity={searchParams.fromCity}
             onSelectDestination={(dest) => {
-              setSearchParams({
+              const updated = {
                 ...searchParams,
                 toCity: dest.city,
                 toCode: dest.code,
-              });
+              };
+              setSearchParams(updated);
               setActiveTab('search');
-              setTimeout(() => {
-                handleSearch();
-              }, 100);
+              handleSearch(updated);
             }}
           />
         )}
@@ -241,19 +256,11 @@ export const App: React.FC = () => {
         mode={airportModalMode}
         currentCode={airportModalMode === 'from' ? searchParams.fromCode : searchParams.toCode}
         onSelect={(airport) => {
-          if (airportModalMode === 'from') {
-            setSearchParams({
-              ...searchParams,
-              fromCode: airport.code,
-              fromCity: airport.city,
-            });
-          } else {
-            setSearchParams({
-              ...searchParams,
-              toCode: airport.code,
-              toCity: airport.city,
-            });
-          }
+          const updated = airportModalMode === 'from'
+            ? { ...searchParams, fromCode: airport.code, fromCity: airport.city }
+            : { ...searchParams, toCode: airport.code, toCity: airport.city };
+          setSearchParams(updated);
+          handleSearch(updated);
         }}
       />
 
@@ -262,10 +269,12 @@ export const App: React.FC = () => {
         onClose={() => setIsCalendarModalOpen(false)}
         selectedDate={searchParams.departureDate}
         onSelectDate={(date) => {
-          setSearchParams({
+          const updated = {
             ...searchParams,
             departureDate: date,
-          });
+          };
+          setSearchParams(updated);
+          handleSearch(updated);
         }}
         basePrice={flights[0]?.bestPrice || 14500}
       />
