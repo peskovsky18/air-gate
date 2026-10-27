@@ -52,7 +52,7 @@ export const FlightList: React.FC<FlightListProps> = ({
           <span>Сравнение цен со всех сервисов в реальном времени</span>
         </div>
         <p className="text-zinc-600 dark:text-zinc-300 mt-1 leading-snug">
-          В каждой карточке собраны цены от КупиБилет, City.Travel, Trip.com, OneTwoTrip и сайтов авиакомпаний. Выбирайте лучшую цену и покупайте без наценок.
+          В каждой карточке собраны цены от КупиБилет, Kiwi.com, City.Travel и официальных сайтов авиакомпаний. Выбирайте лучшую цену и покупайте без наценок.
         </p>
       </div>
 

@@ -163,7 +163,7 @@ export const App: React.FC = () => {
                     Сканирование котировок рынка
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
-                    Запрашиваем живые цены у КупиБилет, City.Travel, Trip.com и авиакомпаний...
+                    Запрашиваем живые цены у КупиБилет, Kiwi.com, City.Travel и авиакомпаний...
                   </p>
                 </div>
               ) : hasSearched ? (

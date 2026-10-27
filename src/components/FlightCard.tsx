@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Flight } from '../types';
 import { formatDateDisplayRu } from '../lib/dateUtils';
-import { haptic, openExternalLink } from '../lib/telegram';
+import { haptic, openExternalLink, getTelegramWebApp } from '../lib/telegram';
 import { ShareModal } from './ShareModal';
 
 interface FlightCardProps {
@@ -47,10 +47,24 @@ export const FlightCard: React.FC<FlightCardProps> = ({
     onToggleFavorite(flight.id);
   };
 
-  const handleBookClick = (e: React.MouseEvent, url: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openExternalLink(url || flight.marketAnalysis.bestSellerUrl);
+  const handleBookClick = (e: React.MouseEvent<HTMLAnchorElement>, targetUrl: string) => {
+    const finalUrl = targetUrl || flight.marketAnalysis.bestSellerUrl;
+    if (!finalUrl) return;
+
+    haptic.medium();
+    const tg = getTelegramWebApp();
+
+    if (tg && typeof tg.openLink === 'function') {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        tg.openLink(finalUrl, { try_instant_view: false });
+      } catch (err) {
+        console.warn('Telegram openLink error, falling back:', err);
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+    // If not running inside Telegram, native <a> with target="_blank" handles the click cleanly
   };
 
   const isMultiHub = Boolean(flight.multiHubAlternative);
@@ -255,13 +269,16 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                       )}
                     </div>
 
-                    <button
+                    <a
+                      href={seller.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={(e) => handleBookClick(e, seller.bookingUrl)}
-                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm pressable"
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm pressable no-underline"
                     >
                       <span>Купить</span>
                       <ArrowRight className="w-3 h-3" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               ))}
@@ -292,13 +309,16 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               </div>
             </div>
 
-            <button
+            <a
+              href={flight.marketAnalysis.bestSellerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={(e) => handleBookClick(e, flight.marketAnalysis.bestSellerUrl)}
-              className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-[13px] tracking-tight flex items-center gap-2 shadow-lg shadow-blue-600/25 pressable whitespace-nowrap"
+              className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-[13px] tracking-tight flex items-center gap-2 shadow-lg shadow-blue-600/25 pressable whitespace-nowrap no-underline"
             >
               <span>Купить за {flight.bestPrice.toLocaleString('ru-RU')} ₽</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-            </button>
+            </a>
           </div>
         </div>
       </div>

@@ -70,7 +70,14 @@ export const openExternalLink = (url: string) => {
   }
 
   // Fallback for regular browser
-  window.open(url, '_blank', 'noopener,noreferrer');
+  try {
+    const win = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      window.location.href = url;
+    }
+  } catch {
+    window.location.href = url;
+  }
 };
 
 // Haptic feedback with safe fallback
