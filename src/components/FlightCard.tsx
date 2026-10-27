@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Send,
   Bus,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  ShieldAlert
 } from 'lucide-react';
 import { Flight } from '../types';
 import { formatDateDisplayRu } from '../lib/dateUtils';
@@ -29,7 +31,8 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   isFavorite,
   onToggleFavorite,
 }) => {
-  const [showSellers, setShowSellers] = useState(false);
+  const [showAllSellers, setShowAllSellers] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(flight.stopsCount > 0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const handleShareClick = (e: React.MouseEvent) => {
@@ -55,25 +58,15 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   const isSmartCombo = flight.flightType === 'smart_combination';
   const formattedFlightDate = formatDateDisplayRu(flight.departureDate);
 
+  // Sellers to display in the compact price comparison list (top 3 or all)
+  const displayedSellers = showAllSellers ? flight.sellers : flight.sellers.slice(0, 3);
+
   return (
     <>
       <div className={`ios-card mb-4 mx-4 overflow-hidden border ${
         isCharter ? 'border-amber-500/50' : isSmartCombo ? 'border-purple-500/50' : isMultiHub ? 'border-blue-500/50' : 'border-black/[0.08] dark:border-white/[0.12]'
       }`}>
-        {/* 1. Charter Badge */}
-        {isCharter && (
-          <div className="bg-amber-500/20 dark:bg-amber-500/25 px-4 py-2 hairline-b flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 font-bold text-amber-950 dark:text-amber-200">
-              <Plane className="w-3.5 h-3.5" />
-              <span>Чартерные блоки туроператоров</span>
-            </div>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-950 dark:text-amber-100">
-              Скидки до 40%
-            </span>
-          </div>
-        )}
-
-        {/* 2. Smart Combo / Multi-Hub Banner */}
+        {/* 1. Multi-Hub Ground+Flight Banner */}
         {flight.multiHubAlternative && (
           <div className="bg-blue-600/20 dark:bg-blue-500/25 px-4 py-2.5 hairline-b flex items-start gap-2.5">
             <Bus className="w-4 h-4 text-blue-600 dark:text-blue-300 flex-shrink-0 mt-0.5" />
@@ -82,13 +75,13 @@ export const FlightCard: React.FC<FlightCardProps> = ({
                 {flight.multiHubAlternative.badgeText}:
               </span>
               <span className="text-zinc-800 dark:text-zinc-200 ml-1">
-                {flight.multiHubAlternative.groundTransport} + европейский лоукостер.
+                {flight.multiHubAlternative.groundTransport} ({flight.multiHubAlternative.groundPrice.toLocaleString('ru-RU')} ₽) + перелет ({flight.multiHubAlternative.flightPrice.toLocaleString('ru-RU')} ₽).
               </span>
             </div>
           </div>
         )}
 
-        {/* Top Bar: Route, Date, Provider & Actions */}
+        {/* Top Bar: Route, Flight Info & Actions */}
         <div className="px-4 pt-3.5 pb-2.5 flex items-start justify-between hairline-b">
           <div className="min-w-0 flex-1 pr-2">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -106,11 +99,17 @@ export const FlightCard: React.FC<FlightCardProps> = ({
 
             <div className="flex items-center gap-2 mt-1 text-xs text-zinc-600 dark:text-zinc-300 flex-wrap">
               <span className="font-bold text-black dark:text-white">{flight.airlines.join(', ')}</span>
+              {flight.segments[0]?.flightNumber && (
+                <>
+                  <span>•</span>
+                  <span className="font-mono text-zinc-500 dark:text-zinc-400 font-semibold">{flight.segments[0].flightNumber}</span>
+                </>
+              )}
               <span>•</span>
               <span className="font-medium capitalize">{formattedFlightDate}</span>
               {flight.isCheapest && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                  Рекомендовано
+                  Лучшая цена
                 </span>
               )}
             </div>
@@ -137,44 +136,149 @@ export const FlightCard: React.FC<FlightCardProps> = ({
           </div>
         </div>
 
-        {/* Channel Details & Live Search Status */}
-        <div className="p-4 pt-3 space-y-3">
-          {/* Explanation Banner */}
-          <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06]">
-            <div className="flex items-center justify-between text-xs font-bold text-black dark:text-white mb-1">
-              <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{flight.verdict.badgeTitle}</span>
-              </span>
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+        {/* Flight Schedule */}
+        <div className="p-4 pt-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[26px] font-extrabold text-black dark:text-white tracking-tight tabular leading-none">
+                {flight.departureTime}
+              </div>
+              <div className="text-[13px] font-bold text-black dark:text-white mt-1">
+                {flight.fromCode}
+              </div>
+              <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
+                {flight.fromCity}
+              </div>
+            </div>
+
+            <div className="flex-1 px-4 flex flex-col items-center">
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mb-1 tabular">
                 {flight.durationTotal}
               </span>
-            </div>
-            <p className="text-[12px] text-zinc-600 dark:text-zinc-300 leading-snug">
-              {flight.verdict.explanation}
-            </p>
-          </div>
-
-          {/* Key Advantages Tags */}
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-              <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-              <span>МИР / СБП / Карты РФ</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <span>Живые цены без наценок</span>
-            </div>
-          </div>
-
-          {/* Primary Action Button */}
-          <div className="pt-2 hairline-t flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-bold text-zinc-500 dark:text-zinc-400">
-                Продавец: <strong className="text-black dark:text-white">{flight.marketAnalysis.bestSellerName}</strong>
+              <div className="w-full flex items-center relative">
+                <div className="h-[2px] w-full bg-zinc-300 dark:bg-zinc-700 relative">
+                  {flight.stopsCount > 0 && (
+                    <div className="absolute left-[50%] -top-[3px] -translate-x-[50%] w-2 h-2 rounded-full bg-orange-500 ring-2 ring-white dark:ring-zinc-900" />
+                  )}
+                </div>
               </div>
-              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">
-                Реальные билеты и места
+              <button
+                onClick={() => {
+                  haptic.selection();
+                  setShowTimeline(!showTimeline);
+                }}
+                className="text-[11px] text-blue-600 dark:text-blue-400 mt-1 font-bold pressable"
+              >
+                {flight.stopsCount === 0
+                  ? 'Прямой рейс'
+                  : `${flight.stopsCount} пересадка (${flight.layovers.map(l => l.city).join(', ')}) ↓`}
+              </button>
+            </div>
+
+            <div className="text-right">
+              <div className="text-[26px] font-extrabold text-black dark:text-white tracking-tight tabular leading-none">
+                {flight.arrivalTime}
+              </div>
+              <div className="text-[13px] font-bold text-black dark:text-white mt-1">
+                {flight.toCode}
+              </div>
+              <div className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
+                {flight.toCity}
+              </div>
+            </div>
+          </div>
+
+          {/* Transfer Timeline */}
+          {flight.stopsCount > 0 && showTimeline && (
+            <div className="mt-3 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-black/[0.04] dark:border-white/[0.06] space-y-2 text-xs">
+              <div className="my-1 py-1.5 px-2.5 rounded-lg bg-zinc-200 dark:bg-zinc-900 border-l-2 border-orange-500 space-y-1">
+                <div className="font-bold text-black dark:text-white">
+                  ⏱ Стыковка {flight.layovers[0]?.duration} в {flight.layovers[0]?.airportCode} ({flight.layovers[0]?.city})
+                </div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Сквозная регистрация: багаж летит до конечного пункта.</span>
+                </div>
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">
+                  🛂 {flight.transitVisaNote}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PRICES COMPARISON TABLE FROM ALL SERVICES */}
+          <div className="mt-3.5 p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 border border-black/[0.05] dark:border-white/[0.08] space-y-2">
+            <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pb-1 hairline-b">
+              <span>Цены на всех сервисах:</span>
+              <span>Стоимость</span>
+            </div>
+
+            <div className="space-y-1.5 divide-y divide-black/[0.04] dark:divide-white/[0.06]">
+              {displayedSellers.map((seller) => (
+                <div
+                  key={seller.id}
+                  className="pt-1.5 first:pt-0 flex items-center justify-between text-xs"
+                >
+                  <div className="min-w-0 pr-2">
+                    <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
+                      <span className="truncate">{seller.sellerName}</span>
+                      {seller.price === flight.bestPrice && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-300 font-bold whitespace-nowrap">
+                          ТОП-1
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                      {seller.baggageIncluded ? 'Багаж 20-23 кг' : 'Без багажа'} • Рейтинг {seller.rating}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="text-right">
+                      <div className="font-extrabold text-black dark:text-white tabular text-[13px]">
+                        {seller.price.toLocaleString('ru-RU')} ₽
+                      </div>
+                      {seller.paymentForeign && (
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold tabular">
+                          €{seller.paymentForeign.amount}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={(e) => handleBookClick(e, seller.bookingUrl)}
+                      className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm pressable"
+                    >
+                      <span>Купить</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {flight.sellers.length > 3 && (
+              <button
+                onClick={() => {
+                  haptic.selection();
+                  setShowAllSellers(!showAllSellers);
+                }}
+                className="w-full pt-1.5 text-center text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center gap-1 pressable"
+              >
+                <span>{showAllSellers ? 'Скрыть других продавцов' : `Показать еще ${flight.sellers.length - 3} продавцов`}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showAllSellers ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
+
+          {/* Primary Quick Buy Button */}
+          <div className="mt-3 pt-3 hairline-t flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Лучшая цена у: <strong className="text-black dark:text-white font-bold">{flight.marketAnalysis.bestSellerName}</strong>
+              </div>
+              <div className="text-[22px] font-black text-black dark:text-white tracking-tight tabular leading-none mt-0.5">
+                {flight.bestPrice.toLocaleString('ru-RU')} ₽
               </div>
             </div>
 
@@ -182,80 +286,10 @@ export const FlightCard: React.FC<FlightCardProps> = ({
               onClick={(e) => handleBookClick(e, flight.marketAnalysis.bestSellerUrl)}
               className="py-3 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-[13px] tracking-tight flex items-center gap-2 shadow-md pressable whitespace-nowrap"
             >
-              <span>Искать на {flight.marketAnalysis.bestSellerName}</span>
+              <span>Купить за {flight.bestPrice.toLocaleString('ru-RU')} ₽</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Secondary Actions: Compare Sellers & Share */}
-          <div className="flex items-center justify-between pt-1 text-[11px]">
-            <button
-              onClick={handleShareClick}
-              className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold pressable"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Отправить маршрут близким</span>
-            </button>
-
-            {flight.sellers.length > 1 && (
-              <button
-                onClick={() => {
-                  haptic.selection();
-                  setShowSellers(!showSellers);
-                }}
-                className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 font-semibold pressable"
-              >
-                <span>Все варианты ({flight.sellers.length})</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    showSellers ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-            )}
-          </div>
-
-          {/* Multiple Sellers Drawer */}
-          <AnimatePresence>
-            {showSellers && flight.sellers.length > 1 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-                className="mt-2 pt-2 hairline-t divide-y divide-black/[0.06] dark:divide-white/[0.06]"
-              >
-                {flight.sellers.map((seller) => (
-                  <div
-                    key={seller.id}
-                    className="py-2.5 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                        <span>{seller.sellerName}</span>
-                        {seller.sellerName === flight.marketAnalysis.bestSellerName && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold">
-                            ТОП-1
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        {seller.isAirlineDirect ? 'Прямой сайт перевозчика' : 'Аккредитованный агент'} • Рейтинг {seller.rating}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={(e) => handleBookClick(e, seller.bookingUrl)}
-                      className="px-3.5 py-1.5 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-[11px] font-bold text-black dark:text-white flex items-center gap-1 pressable"
-                    >
-                      <span>К поиску</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
 

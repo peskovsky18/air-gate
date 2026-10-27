@@ -22,13 +22,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const baggageText = flight.baggageIncluded ? 'Багаж 20-23 кг включен' : 'Тариф без багажа (ручная кладь)';
   const stopsText = flight.stopsCount === 0 ? 'Прямой рейс без пересадок' : `${flight.stopsCount} пересадка (${flight.layovers.map(l => l.city).join(', ')})`;
 
-  const shareText = `✈️ Билеты для нашей поездки!
+  const shareText = `✈️ Билеты для нашей поездки:
 📍 ${flight.fromCity} (${flight.fromCode}) → ${flight.toCity} (${flight.toCode})
 📅 Дата вылета: ${dateText}
-🏢 Продавец / Авиакомпания: ${flight.marketAnalysis.bestSellerName}
-🎫 Маршрут: ${flight.durationTotal}
+⏱ Время: ${flight.departureTime} → ${flight.arrivalTime} (${flight.durationTotal})
+✈️ Рейс: ${flight.airlines.join(', ')} ${flight.segments[0]?.flightNumber ? `(${flight.segments[0].flightNumber})` : ''}
+💰 Лучшая цена: ${flight.bestPrice.toLocaleString('ru-RU')} ₽ у ${flight.marketAnalysis.bestSellerName}
 
-🔗 Ссылка на живой поиск и покупку:
+🔗 Ссылка на покупку билета:
 ${flight.marketAnalysis.bestSellerUrl}`;
 
   const handleCopy = () => {

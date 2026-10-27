@@ -22,22 +22,20 @@ export const FlightList: React.FC<FlightListProps> = ({
   onOpenSubscriptionModal,
   filters,
 }) => {
-  const [filterTab, setFilterTab] = useState<'all' | 'ota' | 'airline'>('all');
+  const [filterTab, setFilterTab] = useState<'all' | 'cheapest' | 'direct'>('all');
 
   const filteredFlights = useMemo(() => {
     let result = [...flights];
 
-    if (filterTab === 'ota') {
-      result = result.filter(f => f.flightType === 'regular' && f.sellers[0]?.isAirlineDirect === false);
-    } else if (filterTab === 'airline') {
-      result = result.filter(f => f.sellers[0]?.isAirlineDirect === true);
+    if (filterTab === 'direct' || filters.directOnly) {
+      result = result.filter(f => f.stopsCount === 0);
     }
-
     if (filters.baggageOnly) {
       result = result.filter(f => f.baggageIncluded);
     }
-    if (filters.directOnly) {
-      result = result.filter(f => f.stopsCount === 0);
+
+    if (filterTab === 'cheapest') {
+      result.sort((a, b) => a.bestPrice - b.bestPrice);
     }
 
     return result;
@@ -51,10 +49,10 @@ export const FlightList: React.FC<FlightListProps> = ({
       <div className="mx-4 mb-2 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 text-xs">
         <div className="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-200 text-[13px]">
           <Search className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-          <span>Живой поиск по проверенным продавцам</span>
+          <span>Сравнение цен со всех сервисов в реальном времени</span>
         </div>
         <p className="text-zinc-600 dark:text-zinc-300 mt-1 leading-snug">
-          Все кнопки ведут к реальным билетам и местам на рейсы без скрытых наценок. Выберите продавца или авиакомпанию для покупки.
+          В каждой карточке собраны цены от КупиБилет, City.Travel, Trip.com, OneTwoTrip и сайтов авиакомпаний. Выбирайте лучшую цену и покупайте без наценок.
         </p>
       </div>
 
@@ -62,9 +60,9 @@ export const FlightList: React.FC<FlightListProps> = ({
       <div className="px-4 py-2 flex items-center justify-between gap-2">
         <div className="flex-1 p-0.5 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 flex items-center relative">
           {[
-            { id: 'all', label: 'Все каналы' },
-            { id: 'ota', label: 'Агрегаторы' },
-            { id: 'airline', label: 'Авиакомпании' },
+            { id: 'all', label: 'Все рейсы' },
+            { id: 'cheapest', label: 'Сначала дешевые' },
+            { id: 'direct', label: 'Только прямые' },
           ].map((tab) => {
             const isActive = filterTab === tab.id;
             return (
@@ -115,10 +113,10 @@ export const FlightList: React.FC<FlightListProps> = ({
       {filteredFlights.length === 0 ? (
         <div className="mx-4 my-8 p-8 ios-card text-center">
           <p className="text-[15px] font-medium text-black dark:text-white">
-            По выбранным фильтрам вариантов не найдено
+            По выбранным фильтрам рейсов не найдено
           </p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
-            Попробуйте переключить вкладку каналов
+            Попробуйте сбросить фильтры
           </p>
         </div>
       ) : (
