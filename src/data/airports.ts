@@ -445,17 +445,548 @@ export const POPULAR_AIRPORTS: Airport[] = [
     nearbyCodes: ['EWR', 'LGA']
   },
   {
+    code: 'EWR',
+    city: 'Нью-Йорк (Ньюарк)',
+    country: 'США',
+    name: 'Ньюарк Либерти',
+    popular: false,
+    nearbyCodes: ['JFK', 'LGA']
+  },
+  {
     code: 'MIA',
     city: 'Майами',
     country: 'США',
     name: 'Международный аэропорт Майами',
     popular: true,
     nearbyCodes: ['FLL']
+  },
+  {
+    code: 'LAX',
+    city: 'Лос-Анджелес',
+    country: 'США',
+    name: 'Международный аэропорт Лос-Анджелеса',
+    popular: true,
+    nearbyCodes: ['BUR', 'ONT']
+  },
+  {
+    code: 'SFO',
+    city: 'Сан-Франциско',
+    country: 'США',
+    name: 'Международный аэропорт Сан-Франциско',
+    popular: true,
+    nearbyCodes: ['OAK', 'SJC']
+  },
+  {
+    code: 'ORD',
+    city: 'Чикаго',
+    country: 'США',
+    name: 'О’Хара',
+    popular: true,
+    nearbyCodes: ['MDW']
+  },
+  {
+    code: 'BOS',
+    city: 'Бостон',
+    country: 'США',
+    name: 'Логан',
+    popular: false,
+    nearbyCodes: ['JFK']
+  },
+  {
+    code: 'LAS',
+    city: 'Лас-Вегас',
+    country: 'США',
+    name: 'Гарри Рид',
+    popular: false,
+    nearbyCodes: ['LAX']
+  },
+  {
+    code: 'YYZ',
+    city: 'Торонто',
+    country: 'Канада',
+    name: 'Пирсон',
+    popular: true,
+    nearbyCodes: ['YTZ']
+  },
+  {
+    code: 'YVR',
+    city: 'Ванкувер',
+    country: 'Канада',
+    name: 'Международный аэропорт Ванкувер',
+    popular: false,
+    nearbyCodes: ['SEA']
+  },
+  {
+    code: 'MEX',
+    city: 'Мехико',
+    country: 'Мексика',
+    name: 'Бенито Хуарес',
+    popular: true,
+    nearbyCodes: ['NLU']
+  },
+  {
+    code: 'CUN',
+    city: 'Канкун',
+    country: 'Мексика',
+    name: 'Международный аэропорт Канкун',
+    popular: true,
+    nearbyCodes: ['MID']
+  },
+
+  // Расширенная Европа и курорты
+  {
+    code: 'ZRH',
+    city: 'Цюрих',
+    country: 'Швейцария',
+    name: 'Аэропорт Цюрих',
+    popular: true,
+    nearbyCodes: ['BSL', 'GVA']
+  },
+  {
+    code: 'GVA',
+    city: 'Женева',
+    country: 'Швейцария',
+    name: 'Куантран',
+    popular: true,
+    nearbyCodes: ['LYS', 'ZRH']
+  },
+  {
+    code: 'BRU',
+    city: 'Брюссель',
+    country: 'Бельгия',
+    name: 'Завентем',
+    popular: true,
+    nearbyCodes: ['CRL', 'AMS']
+  },
+  {
+    code: 'ARN',
+    city: 'Стокгольм',
+    country: 'Швеция',
+    name: 'Арланда',
+    popular: true,
+    nearbyCodes: ['BMA', 'HEL']
+  },
+  {
+    code: 'OSL',
+    city: 'Осло',
+    country: 'Норвегия',
+    name: 'Гардермуэн',
+    popular: true,
+    nearbyCodes: ['TRF', 'CPH']
+  },
+  {
+    code: 'CPH',
+    city: 'Копенгаген',
+    country: 'Дания',
+    name: 'Каструп',
+    popular: true,
+    nearbyCodes: ['MMX', 'BER']
+  },
+  {
+    code: 'KEF',
+    city: 'Рейкьявик',
+    country: 'Исландия',
+    name: 'Кеблавик',
+    popular: false,
+    nearbyCodes: ['DUB']
+  },
+  {
+    code: 'DUB',
+    city: 'Дублин',
+    country: 'Ирландия',
+    name: 'Аэропорт Дублин',
+    popular: true,
+    nearbyCodes: ['BFS', 'LHR']
+  },
+  {
+    code: 'LGW',
+    city: 'Лондон (Гатвик)',
+    country: 'Великобритания',
+    name: 'Гатвик',
+    popular: false,
+    nearbyCodes: ['LHR', 'STN', 'LTN']
+  },
+  {
+    code: 'STN',
+    city: 'Лондон (Станстед)',
+    country: 'Великобритания',
+    name: 'Станстед',
+    popular: false,
+    nearbyCodes: ['LHR', 'LTN']
+  },
+  {
+    code: 'NCE',
+    city: 'Ницца',
+    country: 'Франция',
+    name: 'Лазурный Берег',
+    popular: true,
+    nearbyCodes: ['MRS', 'GOA']
+  },
+  {
+    code: 'VCE',
+    city: 'Венеция',
+    country: 'Италия',
+    name: 'Марко Поло',
+    popular: true,
+    nearbyCodes: ['TSF', 'BLQ']
+  },
+  {
+    code: 'NAP',
+    city: 'Неаполь',
+    country: 'Италия',
+    name: 'Каподикино',
+    popular: true,
+    nearbyCodes: ['FCO']
+  },
+  {
+    code: 'AGP',
+    city: 'Малага',
+    country: 'Испания',
+    name: 'Коста-дель-Соль',
+    popular: true,
+    nearbyCodes: ['SVQ', 'ALC']
+  },
+  {
+    code: 'ALC',
+    city: 'Аликанте',
+    country: 'Испания',
+    name: 'Эльче',
+    popular: false,
+    nearbyCodes: ['VLC', 'AGP']
+  },
+  {
+    code: 'PMI',
+    city: 'Пальма-де-Майорка',
+    country: 'Испания',
+    name: 'Сон-Сан-Хуан',
+    popular: true,
+    nearbyCodes: ['BCN', 'IBZ']
+  },
+  {
+    code: 'TFS',
+    city: 'Тенерифе',
+    country: 'Испания',
+    name: 'Тенерифе-Южный',
+    popular: true,
+    nearbyCodes: ['TFN', 'LPA']
+  },
+  {
+    code: 'OPO',
+    city: 'Порту',
+    country: 'Португалия',
+    name: 'Франсишку ди Са Карнейру',
+    popular: false,
+    nearbyCodes: ['LIS']
+  },
+  {
+    code: 'HER',
+    city: 'Ираклион (Крит)',
+    country: 'Греция',
+    name: 'Никос Казандзакис',
+    popular: true,
+    nearbyCodes: ['CHQ', 'ATH']
+  },
+  {
+    code: 'BEG',
+    city: 'Белград',
+    country: 'Сербия',
+    name: 'Никола Тесла',
+    popular: true,
+    nearbyCodes: ['BUD', 'SOF']
+  },
+  {
+    code: 'SOF',
+    city: 'София',
+    country: 'Болгария',
+    name: 'Аэропорт София',
+    popular: false,
+    nearbyCodes: ['BEG', 'OTP']
+  },
+  {
+    code: 'OTP',
+    city: 'Бухарест',
+    country: 'Румыния',
+    name: 'Анри Коанда',
+    popular: false,
+    nearbyCodes: ['SOF', 'BUD']
+  },
+  {
+    code: 'DBV',
+    city: 'Дубровник',
+    country: 'Хорватия',
+    name: 'Аэропорт Дубровник',
+    popular: false,
+    nearbyCodes: ['SPU', 'TGD']
+  },
+  {
+    code: 'TGD',
+    city: 'Подгорица',
+    country: 'Черногория',
+    name: 'Аэропорт Голубовцы',
+    popular: true,
+    nearbyCodes: ['TIV', 'DBV']
+  },
+
+  // Азия, Ближний Восток и Индийский океан
+  {
+    code: 'HND',
+    city: 'Токио (Ханеда)',
+    country: 'Япония',
+    name: 'Токио-Ханеда',
+    popular: true,
+    nearbyCodes: ['NRT']
+  },
+  {
+    code: 'NRT',
+    city: 'Токио (Нарита)',
+    country: 'Япония',
+    name: 'Токио-Нарита',
+    popular: true,
+    nearbyCodes: ['HND']
+  },
+  {
+    code: 'KIX',
+    city: 'Осака',
+    country: 'Япония',
+    name: 'Кансай',
+    popular: false,
+    nearbyCodes: ['ITM', 'NGO']
+  },
+  {
+    code: 'ICN',
+    city: 'Сеул',
+    country: 'Южная Корея',
+    name: 'Инчхон',
+    popular: true,
+    nearbyCodes: ['GMP']
+  },
+  {
+    code: 'HKG',
+    city: 'Гонконг',
+    country: 'Китай',
+    name: 'Чхеклапкок',
+    popular: true,
+    nearbyCodes: ['SZX', 'CAN']
+  },
+  {
+    code: 'TPE',
+    city: 'Тайбэй',
+    country: 'Тайвань',
+    name: 'Таоюань',
+    popular: false,
+    nearbyCodes: ['HKG']
+  },
+  {
+    code: 'PEK',
+    city: 'Пекин',
+    country: 'Китай',
+    name: 'Шоуду (Столичный)',
+    popular: true,
+    nearbyCodes: ['PKX']
+  },
+  {
+    code: 'PVG',
+    city: 'Шанхай',
+    country: 'Китай',
+    name: 'Пудун',
+    popular: true,
+    nearbyCodes: ['SHA']
+  },
+  {
+    code: 'KUL',
+    city: 'Куала-Лумпур',
+    country: 'Малайзия',
+    name: 'KLIA',
+    popular: true,
+    nearbyCodes: ['SIN', 'BKK']
+  },
+  {
+    code: 'SGN',
+    city: 'Хошимин',
+    country: 'Вьетнам',
+    name: 'Таншоннят',
+    popular: true,
+    nearbyCodes: ['HAN', 'BKK']
+  },
+  {
+    code: 'HAN',
+    city: 'Ханой',
+    country: 'Вьетнам',
+    name: 'Нойбай',
+    popular: false,
+    nearbyCodes: ['SGN']
+  },
+  {
+    code: 'MNL',
+    city: 'Манила',
+    country: 'Филиппины',
+    name: 'Ниной Акино',
+    popular: false,
+    nearbyCodes: ['HKG']
+  },
+  {
+    code: 'DEL',
+    city: 'Дели',
+    country: 'Индия',
+    name: 'Им. Индиры Ганди',
+    popular: true,
+    nearbyCodes: ['BOM']
+  },
+  {
+    code: 'BOM',
+    city: 'Мумбаи',
+    country: 'Индия',
+    name: 'Чхатрапати Шиваджи',
+    popular: true,
+    nearbyCodes: ['DEL', 'GOI']
+  },
+  {
+    code: 'GOI',
+    city: 'Гоа',
+    country: 'Индия',
+    name: 'Даболим / Манохар',
+    popular: true,
+    nearbyCodes: ['BOM']
+  },
+  {
+    code: 'MLE',
+    city: 'Мале (Мальдивы)',
+    country: 'Мальдивы',
+    name: 'Велана',
+    popular: true,
+    nearbyCodes: ['CMB']
+  },
+  {
+    code: 'CMB',
+    city: 'Коломбо',
+    country: 'Шри-Ланка',
+    name: 'Бандаранаике',
+    popular: true,
+    nearbyCodes: ['MLE']
+  },
+  {
+    code: 'SYD',
+    city: 'Сидней',
+    country: 'Австралия',
+    name: 'Кингсфорд Смит',
+    popular: true,
+    nearbyCodes: ['MEL']
+  },
+  {
+    code: 'MEL',
+    city: 'Мельбурн',
+    country: 'Австралия',
+    name: 'Тулламарин',
+    popular: true,
+    nearbyCodes: ['SYD']
+  },
+  {
+    code: 'AKL',
+    city: 'Окленд',
+    country: 'Новая Зеландия',
+    name: 'Аэропорт Окленд',
+    popular: false,
+    nearbyCodes: ['SYD']
+  },
+
+  // Африка и Латинская Америка
+  {
+    code: 'CAI',
+    city: 'Каир',
+    country: 'Египет',
+    name: 'Международный аэропорт Каир',
+    popular: true,
+    nearbyCodes: ['HRG', 'SSH']
+  },
+  {
+    code: 'HRG',
+    city: 'Хургада',
+    country: 'Египет',
+    name: 'Международный аэропорт Хургада',
+    popular: true,
+    nearbyCodes: ['SSH', 'CAI']
+  },
+  {
+    code: 'SSH',
+    city: 'Шарм-эль-Шейх',
+    country: 'Египет',
+    name: 'Офира',
+    popular: true,
+    nearbyCodes: ['HRG', 'CAI']
+  },
+  {
+    code: 'RAK',
+    city: 'Марракеш',
+    country: 'Марокко',
+    name: 'Менара',
+    popular: false,
+    nearbyCodes: ['CMN']
+  },
+  {
+    code: 'ZNZ',
+    city: 'Занзибар',
+    country: 'Танзания',
+    name: 'Абейд Амани Каруме',
+    popular: true,
+    nearbyCodes: ['DAR', 'NBO']
+  },
+  {
+    code: 'JNB',
+    city: 'Йоханнесбург',
+    country: 'ЮАР',
+    name: 'О. Р. Тамбо',
+    popular: true,
+    nearbyCodes: ['CPT']
+  },
+  {
+    code: 'CPT',
+    city: 'Кейптаун',
+    country: 'ЮАР',
+    name: 'Международный аэропорт Кейптаун',
+    popular: true,
+    nearbyCodes: ['JNB']
+  },
+  {
+    code: 'GRU',
+    city: 'Сан-Паулу',
+    country: 'Бразилия',
+    name: 'Гуарульос',
+    popular: true,
+    nearbyCodes: ['GIG']
+  },
+  {
+    code: 'GIG',
+    city: 'Рио-де-Жанейро',
+    country: 'Бразилия',
+    name: 'Галеан',
+    popular: true,
+    nearbyCodes: ['GRU']
+  },
+  {
+    code: 'EZE',
+    city: 'Буэнос-Айрес',
+    country: 'Аргентина',
+    name: 'Эсейса им. Пистарини',
+    popular: true,
+    nearbyCodes: ['AEP', 'SCL']
   }
 ];
 
 export const getAirportByCode = (code: string): Airport | undefined => {
-  return POPULAR_AIRPORTS.find(a => a.code.toUpperCase() === code.toUpperCase());
+  if (!code) return undefined;
+  const upper = code.toUpperCase();
+  const found = POPULAR_AIRPORTS.find(a => a.code.toUpperCase() === upper);
+  if (found) return found;
+  if (upper.length === 3 && upper !== 'ANY') {
+    return {
+      code: upper,
+      city: `Аэропорт ${upper}`,
+      country: 'Международный',
+      name: `Международный аэропорт ${upper}`,
+      popular: false,
+    };
+  }
+  return undefined;
 };
 
 export const getNearbyAirports = (code: string): Airport[] => {

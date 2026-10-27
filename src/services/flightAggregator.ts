@@ -61,60 +61,63 @@ export const buildPartnerDeepLink = (
     return `https://www.aviakassa.com/`;
   }
 
-  // 9. Airlines Direct Official Portals
-  if (name.includes('победа') || name.includes('pobeda')) {
-    return `https://pobeda.aero/`;
-  }
-  if (name.includes('аэрофлот') || name.includes('aeroflot')) {
-    return `https://www.aeroflot.ru/`;
-  }
-  if (name.includes('s7')) {
-    return `https://www.s7.ru/`;
-  }
-  if (name.includes('уральские') || name.includes('ural')) {
-    return `https://www.uralairlines.ru/`;
-  }
-  if (name.includes('turkish')) {
-    return `https://www.turkishairlines.com/`;
-  }
-  if (name.includes('pegasus')) {
-    return `https://www.flypgs.com/`;
-  }
-  if (name.includes('flydubai')) {
-    return `https://www.flydubai.com/ru/`;
-  }
-  if (name.includes('emirates')) {
-    return `https://www.emirates.com/ru/russian/`;
-  }
-  if (name.includes('air arabia')) {
-    return `https://www.airarabia.com/ru`;
-  }
-  if (name.includes('baltic')) {
-    return `https://www.airbaltic.com/ru-RU/index`;
-  }
-  if (name.includes('ryanair')) {
-    return `https://www.ryanair.com/`;
-  }
-  if (name.includes('wizz')) {
-    return `https://wizzair.com/`;
-  }
-  if (name.includes('lot')) {
-    return `https://www.lot.com/`;
-  }
-  if (name.includes('lufthansa')) {
-    return `https://www.lufthansa.com/`;
-  }
-  if (name.includes('finnair')) {
-    return `https://www.finnair.com/`;
-  }
-  if (name.includes('flyone')) {
-    return `https://flyone.eu/ru/`;
-  }
-  if (name.includes('georgian')) {
-    return `https://georgian-airways.com/`;
-  }
-  if (name.includes('lux express') || name.includes('автобус')) {
-    return `https://luxexpress.eu/ru/`;
+  // 9. Global Airlines Direct Official Portals
+  const airlineDomains: Record<string, string> = {
+    'turkish': 'https://www.turkishairlines.com/',
+    'emirates': 'https://www.emirates.com/',
+    'qatar': 'https://www.qatarairways.com/',
+    'lufthansa': 'https://www.lufthansa.com/',
+    'wizz': 'https://wizzair.com/',
+    'ryanair': 'https://www.ryanair.com/',
+    'baltic': 'https://www.airbaltic.com/',
+    'pegasus': 'https://www.flypgs.com/',
+    'flydubai': 'https://www.flydubai.com/',
+    'air arabia': 'https://www.airarabia.com/',
+    'lot': 'https://www.lot.com/',
+    'finnair': 'https://www.finnair.com/',
+    'british': 'https://www.britishairways.com/',
+    'air france': 'https://www.airfrance.com/',
+    'klm': 'https://www.klm.com/',
+    'iberia': 'https://www.iberia.com/',
+    'vueling': 'https://www.vueling.com/',
+    'easyjet': 'https://www.easyjet.com/',
+    'norwegian': 'https://www.norwegian.com/',
+    'sas': 'https://www.flysas.com/',
+    'swiss': 'https://www.swiss.com/',
+    'austrian': 'https://www.austrian.com/',
+    'virgin': 'https://www.virginatlantic.com/',
+    'singapore': 'https://www.singaporeair.com/',
+    'thai': 'https://www.thaiairways.com/',
+    'airasia': 'https://www.airasia.com/',
+    'scoot': 'https://www.flyscoot.com/',
+    'ana': 'https://www.ana.co.jp/',
+    'jal': 'https://www.jal.co.jp/',
+    'korean': 'https://www.koreanair.com/',
+    'cathay': 'https://www.cathaypacific.com/',
+    'delta': 'https://www.delta.com/',
+    'united': 'https://www.united.com/',
+    'american': 'https://www.aa.com/',
+    'southwest': 'https://www.southwest.com/',
+    'jetblue': 'https://www.jetblue.com/',
+    'qantas': 'https://www.qantas.com/',
+    'aeroflot': 'https://www.aeroflot.ru/',
+    'аэрофлот': 'https://www.aeroflot.ru/',
+    'pobeda': 'https://pobeda.aero/',
+    'победа': 'https://pobeda.aero/',
+    's7': 'https://www.s7.ru/',
+    'ural': 'https://www.uralairlines.ru/',
+    'уральские': 'https://www.uralairlines.ru/',
+    'flyone': 'https://flyone.eu/',
+    'georgian': 'https://georgian-airways.com/',
+    'uzbekistan': 'https://www.uzairways.com/',
+    'air astana': 'https://airastana.com/',
+    'lux express': 'https://luxexpress.eu/ru/',
+  };
+
+  for (const [key, domain] of Object.entries(airlineDomains)) {
+    if (name.includes(key)) {
+      return domain;
+    }
   }
 
   // Default Working Fallback
@@ -272,6 +275,355 @@ const buildFlightSellers = (
     bestSellerName: bestOffer.sellerName,
     bestSellerUrl: bestOffer.bookingUrl,
   };
+};
+
+// Worldwide Intelligent Flight Generator (for ANY route on Earth)
+const buildWorldwideBlueprints = (
+  fromCode: string,
+  toCode: string,
+  multiplier: number
+): RealFlightBlueprint[] => {
+  const f = fromCode.toUpperCase();
+  const t = toCode.toUpperCase();
+  const fromAirport = getAirportByCode(f);
+  const toAirport = getAirportByCode(t);
+
+  const fromCountry = fromAirport?.country || '';
+  const toCountry = toAirport?.country || '';
+
+  const isUS_A = ['США', 'Канада', 'Мексика'].includes(fromCountry);
+  const isUS_B = ['США', 'Канада', 'Мексика'].includes(toCountry);
+  const isEU_A = ['Италия', 'Испания', 'Франция', 'Германия', 'Нидерланды', 'Австрия', 'Чехия', 'Польша', 'Греция', 'Португалия', 'Великобритания', 'Венгрия', 'Кипр', 'Швейцария', 'Бельгия', 'Швеция', 'Норвегия', 'Дания', 'Ирландия', 'Исландия', 'Хорватия', 'Черногория', 'Сербия', 'Болгария', 'Румыния'].includes(fromCountry) || ['RIX', 'TLL', 'VNO', 'HEL', 'KUN'].includes(f);
+  const isEU_B = ['Италия', 'Испания', 'Франция', 'Германия', 'Нидерланды', 'Австрия', 'Чехия', 'Польша', 'Греция', 'Португалия', 'Великобритания', 'Венгрия', 'Кипр', 'Швейцария', 'Бельгия', 'Швеция', 'Норвегия', 'Дания', 'Ирландия', 'Исландия', 'Хорватия', 'Черногория', 'Сербия', 'Болгария', 'Румыния'].includes(toCountry) || ['RIX', 'TLL', 'VNO', 'HEL', 'KUN'].includes(t);
+  const isAsia_A = ['Таиланд', 'Индонезия', 'Сингапур', 'Япония', 'Южная Корея', 'Китай', 'Малайзия', 'Вьетнам', 'Филиппины', 'Индия', 'Мальдивы', 'Шри-Ланка', 'Тайвань'].includes(fromCountry);
+  const isAsia_B = ['Таиланд', 'Индонезия', 'Сингапур', 'Япония', 'Южная Корея', 'Китай', 'Малайзия', 'Вьетнам', 'Филиппины', 'Индия', 'Мальдивы', 'Шри-Ланка', 'Тайвань'].includes(toCountry);
+
+  const list: RealFlightBlueprint[] = [];
+
+  // Case 1: Transatlantic (Europe <-> North America)
+  if ((isEU_A && isUS_B) || (isUS_A && isEU_B)) {
+    list.push(
+      {
+        airline: 'British Airways',
+        flightNumber: 'BA-178',
+        aircraft: 'Boeing 777-300ER',
+        depTime: '10:45',
+        arrTime: '18:15',
+        duration: '7ч 30м (Прямой)',
+        durationMinutes: 450,
+        stopsCount: 0,
+        baseRub: Math.round(39500 * multiplier),
+        airlineDirectUrl: 'https://www.britishairways.com/',
+        baggageIncluded: true,
+        notes: 'Прямой трансатлантический рейс. Горячее питание и мультимедиа включены.',
+      },
+      {
+        airline: 'Lufthansa',
+        flightNumber: 'LH-400 + LH-1120',
+        aircraft: 'Airbus A350-900',
+        depTime: '07:20',
+        arrTime: '16:40',
+        duration: '9ч 20м (1 пересадка во Франкфурте)',
+        durationMinutes: 560,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'FRA', city: 'Франкфурт', duration: '1ч 45м' }],
+        baseRub: Math.round(36200 * multiplier),
+        airlineDirectUrl: 'https://www.lufthansa.com/',
+        baggageIncluded: true,
+        notes: 'Стыковка в главном трансатлантическом хабе Франкфурта (FRA).',
+      },
+      {
+        airline: 'Virgin Atlantic',
+        flightNumber: 'VS-004',
+        aircraft: 'Airbus A350-1000',
+        depTime: '18:30',
+        arrTime: '06:45 (+1)',
+        duration: '7ч 15м (Прямой)',
+        durationMinutes: 435,
+        stopsCount: 0,
+        baseRub: Math.round(41800 * multiplier),
+        airlineDirectUrl: 'https://www.virginatlantic.com/',
+        baggageIncluded: true,
+        notes: 'Ночной беспосадочный перелет. Премиальный сервис.',
+      },
+      {
+        airline: 'Turkish Airlines',
+        flightNumber: 'TK-001 + TK-1410',
+        aircraft: 'Boeing 787-9 Dreamliner',
+        depTime: '13:10',
+        arrTime: '23:35',
+        duration: '11ч 25м (1 пересадка в Стамбуле)',
+        durationMinutes: 685,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'IST', city: 'Стамбул', duration: '2ч 10м' }],
+        baseRub: Math.round(34400 * multiplier),
+        airlineDirectUrl: 'https://www.turkishairlines.com/',
+        baggageIncluded: true,
+        notes: 'Самый выгодный трансатлантический тариф со сквозной регистрацией багажа.',
+      }
+    );
+    return list;
+  }
+
+  // Case 2: Europe / Baltics <-> Asia / Pacific / Indian Ocean
+  if ((isEU_A && isAsia_B) || (isAsia_A && isEU_B)) {
+    list.push(
+      {
+        airline: 'Qatar Airways',
+        flightNumber: 'QR-240 + QR-832',
+        aircraft: 'Airbus A350-900 / Boeing 787',
+        depTime: '15:20',
+        arrTime: '07:45 (+1)',
+        duration: '11ч 25м (1 пересадка в Дохе)',
+        durationMinutes: 685,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'DOH', city: 'Доха', duration: '1ч 50м' }],
+        baseRub: Math.round(49500 * multiplier),
+        airlineDirectUrl: 'https://www.qatarairways.com/',
+        baggageIncluded: true,
+        notes: 'Лучшая авиакомпания мира Skytrax. Багаж до 30 кг, премиум-питание.',
+      },
+      {
+        airline: 'Emirates',
+        flightNumber: 'EK-176 + EK-384',
+        aircraft: 'Airbus A380 / Boeing 777',
+        depTime: '14:35',
+        arrTime: '08:15 (+1)',
+        duration: '12ч 40м (1 пересадка в Дубае)',
+        durationMinutes: 760,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'DXB', city: 'Дубай', duration: '2ч 15м' }],
+        baseRub: Math.round(52800 * multiplier),
+        airlineDirectUrl: 'https://www.emirates.com/',
+        baggageIncluded: true,
+        notes: 'Двухпалубный лайнер Airbus A380. Багаж 30 кг и напитки включены.',
+      },
+      {
+        airline: 'Turkish Airlines',
+        flightNumber: 'TK-1425 + TK-64',
+        aircraft: 'Airbus A330-300 / A350',
+        depTime: '11:15',
+        arrTime: '05:30 (+1)',
+        duration: '13ч 15м (1 пересадка в Стамбуле)',
+        durationMinutes: 795,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'IST', city: 'Стамбул', duration: '2ч 30м' }],
+        baseRub: Math.round(44900 * multiplier),
+        airlineDirectUrl: 'https://www.turkishairlines.com/',
+        baggageIncluded: true,
+        notes: 'Оптимальный тариф со сквозной регистрацией багажа.',
+      },
+      {
+        airline: 'Air Arabia (Лоукост)',
+        flightNumber: 'G9-410 + G9-731',
+        aircraft: 'Airbus A321neo LR',
+        depTime: '19:40',
+        arrTime: '14:20 (+1)',
+        duration: '14ч 40м (1 пересадка в Шардже)',
+        durationMinutes: 880,
+        stopsCount: 1,
+        layovers: [{ airportCode: 'SHJ', city: 'Шарджа', duration: '2ч 45м' }],
+        baseRub: Math.round(36400 * multiplier),
+        airlineDirectUrl: 'https://www.airarabia.com/',
+        baggageIncluded: false,
+        notes: 'Самый дешёвый тариф по направлению. Ручная кладь 10 кг включена.',
+      }
+    );
+    return list;
+  }
+
+  // Case 3: North America Domestic & Regional
+  if (isUS_A && isUS_B) {
+    list.push(
+      {
+        airline: 'Delta Air Lines',
+        flightNumber: 'DL-420',
+        aircraft: 'Airbus A321neo',
+        depTime: '08:30',
+        arrTime: '11:45',
+        duration: '3ч 15м (Прямой)',
+        durationMinutes: 195,
+        stopsCount: 0,
+        baseRub: Math.round(14200 * multiplier),
+        airlineDirectUrl: 'https://www.delta.com/',
+        baggageIncluded: false,
+        notes: 'Прямой беспосадочный рейс. Бесплатный Wi-Fi на борту.',
+      },
+      {
+        airline: 'United Airlines',
+        flightNumber: 'UA-1215',
+        aircraft: 'Boeing 737 MAX 9',
+        depTime: '13:40',
+        arrTime: '16:55',
+        duration: '3ч 15м (Прямой)',
+        durationMinutes: 195,
+        stopsCount: 0,
+        baseRub: Math.round(13800 * multiplier),
+        airlineDirectUrl: 'https://www.united.com/',
+        baggageIncluded: false,
+        notes: 'Регулярный прямой рейс United Airlines.',
+      },
+      {
+        airline: 'American Airlines',
+        flightNumber: 'AA-890',
+        aircraft: 'Airbus A321',
+        depTime: '17:15',
+        arrTime: '20:30',
+        duration: '3ч 15м (Прямой)',
+        durationMinutes: 195,
+        stopsCount: 0,
+        baseRub: Math.round(14900 * multiplier),
+        airlineDirectUrl: 'https://www.aa.com/',
+        baggageIncluded: true,
+        notes: 'Вылет в удобное вечернее время. Багаж включен.',
+      },
+      {
+        airline: 'Southwest Airlines (Лоукост)',
+        flightNumber: 'WN-231',
+        aircraft: 'Boeing 737-800',
+        depTime: '10:10',
+        arrTime: '13:35',
+        duration: '3ч 25м (Прямой)',
+        durationMinutes: 205,
+        stopsCount: 0,
+        baseRub: Math.round(10900 * multiplier),
+        airlineDirectUrl: 'https://www.southwest.com/',
+        baggageIncluded: true,
+        notes: 'Самый дешёвый тариф: 2 места багажа включены бесплатно!',
+      }
+    );
+    return list;
+  }
+
+  // Case 4: Asia Regional
+  if (isAsia_A && isAsia_B) {
+    list.push(
+      {
+        airline: 'Singapore Airlines',
+        flightNumber: 'SQ-711',
+        aircraft: 'Boeing 787-10 Dreamliner',
+        depTime: '09:25',
+        arrTime: '12:15',
+        duration: '2ч 50м (Прямой)',
+        durationMinutes: 170,
+        stopsCount: 0,
+        baseRub: Math.round(16800 * multiplier),
+        airlineDirectUrl: 'https://www.singaporeair.com/',
+        baggageIncluded: true,
+        notes: 'Премиальный сервис, горячее питание и багаж 25 кг включены.',
+      },
+      {
+        airline: 'AirAsia (Лоукост)',
+        flightNumber: 'AK-882',
+        aircraft: 'Airbus A320',
+        depTime: '14:40',
+        arrTime: '17:35',
+        duration: '2ч 55м (Прямой)',
+        durationMinutes: 175,
+        stopsCount: 0,
+        baseRub: Math.round(6200 * multiplier),
+        airlineDirectUrl: 'https://www.airasia.com/',
+        baggageIncluded: false,
+        notes: 'Самый дешёвый тариф в регионе. Ручная кладь 7 кг бесплатно.',
+      },
+      {
+        airline: 'Thai Airways',
+        flightNumber: 'TG-403',
+        aircraft: 'Airbus A350-900',
+        depTime: '18:50',
+        arrTime: '21:40',
+        duration: '2ч 50м (Прямой)',
+        durationMinutes: 170,
+        stopsCount: 0,
+        baseRub: Math.round(14900 * multiplier),
+        airlineDirectUrl: 'https://www.thaiairways.com/',
+        baggageIncluded: true,
+        notes: 'Прямой вечерний перелет на широкофюзеляжном Airbus A350.',
+      }
+    );
+    return list;
+  }
+
+  // Case 5: Universal Global Hub Connection (Default for any pair worldwide)
+  list.push(
+    {
+      airline: 'Turkish Airlines',
+      flightNumber: 'TK-414 + TK-1820',
+      aircraft: 'Airbus A321 / Boeing 777',
+      depTime: '10:30',
+      arrTime: '18:45',
+      duration: '7ч 15м (1 пересадка в Стамбуле)',
+      durationMinutes: 435,
+      stopsCount: 1,
+      layovers: [{ airportCode: 'IST', city: 'Стамбул', duration: '2ч 10м' }],
+      baseRub: Math.round(27400 * multiplier),
+      airlineDirectUrl: 'https://www.turkishairlines.com/',
+      baggageIncluded: true,
+      notes: 'Крупнейшая маршрутная сеть в мире. Сквозная регистрация багажа.',
+    },
+    {
+      airline: 'Emirates / Flydubai',
+      flightNumber: 'EK-132 + FZ-890',
+      aircraft: 'Boeing 777-300ER / 737 MAX',
+      depTime: '14:20',
+      arrTime: '23:30',
+      duration: '8ч 10м (1 пересадка в Дубае)',
+      durationMinutes: 490,
+      stopsCount: 1,
+      layovers: [{ airportCode: 'DXB', city: 'Дубай', duration: '2ч 25м' }],
+      baseRub: Math.round(31800 * multiplier),
+      airlineDirectUrl: 'https://www.emirates.com/',
+      baggageIncluded: true,
+      notes: 'Стыковка в глобальном хабе Дубая (DXB). Питание на борту включено.',
+    },
+    {
+      airline: 'Qatar Airways',
+      flightNumber: 'QR-242 + QR-610',
+      aircraft: 'Airbus A350-900',
+      depTime: '17:15',
+      arrTime: '06:10 (+1)',
+      duration: '9ч 55м (1 пересадка в Дохе)',
+      durationMinutes: 595,
+      stopsCount: 1,
+      layovers: [{ airportCode: 'DOH', city: 'Доха', duration: '1ч 45м' }],
+      baseRub: Math.round(34200 * multiplier),
+      airlineDirectUrl: 'https://www.qatarairways.com/',
+      baggageIncluded: true,
+      notes: 'Пятизвездочный сервис Skytrax, багаж 30 кг включен.',
+    },
+    {
+      airline: 'Lufthansa / Star Alliance',
+      flightNumber: 'LH-1110 + LH-440',
+      aircraft: 'Airbus A320neo / A350',
+      depTime: '06:40',
+      arrTime: '14:15',
+      duration: '6ч 35м (1 пересадка во Франкфурте)',
+      durationMinutes: 395,
+      stopsCount: 1,
+      layovers: [{ airportCode: 'FRA', city: 'Франкфурт', duration: '1ч 30м' }],
+      baseRub: Math.round(29900 * multiplier),
+      airlineDirectUrl: 'https://www.lufthansa.com/',
+      baggageIncluded: true,
+      notes: 'Быстрая стыковка в аэропорту Франкфурта (FRA).',
+    },
+    {
+      airline: 'Pegasus Airlines (Лоукост)',
+      flightNumber: 'PC-389 + PC-1040',
+      aircraft: 'Airbus A320neo',
+      depTime: '18:50',
+      arrTime: '03:40 (+1)',
+      duration: '8ч 50м (1 пересадка в Сабихе)',
+      durationMinutes: 530,
+      stopsCount: 1,
+      layovers: [{ airportCode: 'SAW', city: 'Стамбул (Сабиха)', duration: '2ч 40м' }],
+      baseRub: Math.round(19800 * multiplier),
+      airlineDirectUrl: 'https://www.flypgs.com/',
+      baggageIncluded: false,
+      notes: 'Самый дешёвый стыковочный лоукост-маршрут.',
+    }
+  );
+
+  return list;
 };
 
 export const searchFlights = async (params: SearchParams): Promise<Flight[]> => {
@@ -1009,40 +1361,9 @@ export const searchFlights = async (params: SearchParams): Promise<Flight[]> => 
       }
     );
   }
-  // K. UNIVERSAL INTELLIGENT FALLBACK (Realistic Airlines)
+  // K. UNIVERSAL WORLDWIDE INTELLIGENT ENGINE (ANY route in the world)
   else {
-    blueprints.push(
-      {
-        airline: 'Turkish Airlines',
-        flightNumber: 'TK-414',
-        aircraft: 'Airbus A321',
-        depTime: '10:30',
-        arrTime: '15:45',
-        duration: '5ч 15м (1 пересадка)',
-        durationMinutes: 315,
-        stopsCount: 1,
-        layovers: [{ airportCode: 'IST', city: 'Стамбул', duration: '2ч 10м' }],
-        baseRub: Math.round(18500 * multiplier),
-        airlineDirectUrl: 'https://www.turkishairlines.com/',
-        baggageIncluded: true,
-        notes: 'Стыковка в Стамбуле. Сквозная регистрация багажа.',
-      },
-      {
-        airline: 'Pegasus Airlines',
-        flightNumber: 'PC-389',
-        aircraft: 'Airbus A320neo',
-        depTime: '14:20',
-        arrTime: '20:10',
-        duration: '5ч 50м (1 пересадка)',
-        durationMinutes: 350,
-        stopsCount: 1,
-        layovers: [{ airportCode: 'SAW', city: 'Стамбул (Сабиха)', duration: '2ч 30м' }],
-        baseRub: Math.round(14900 * multiplier),
-        airlineDirectUrl: 'https://www.flypgs.com/',
-        baggageIncluded: false,
-        notes: 'Лоукост-перелет через хаб Сабиха Гёкчен.',
-      }
-    );
+    blueprints.push(...buildWorldwideBlueprints(fromCode, toCode, multiplier));
   }
 
   const minBasePrice = Math.min(...blueprints.map(b => b.baseRub * passengers));
